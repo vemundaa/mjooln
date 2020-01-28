@@ -1,6 +1,8 @@
+MANIFEST
 
 .idea/
 .venv/
+dist/
 
 mjooln/__pycache__/
 
