@@ -1,0 +1,7 @@
+pytest
+python-dateutil
+pytz
+simplejson
+pandas
+psutil
+cryptography
