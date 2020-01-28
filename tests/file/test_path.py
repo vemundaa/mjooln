@@ -1,9 +1,8 @@
 import pytest
 import os
-import glob
 import shutil
 
-from mjooln import Config
+from tests.config import Config
 from mjooln import Path, PathError
 
 cfg = Config.get()

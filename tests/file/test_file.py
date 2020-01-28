@@ -1,6 +1,6 @@
 import pytest
 
-from mjooln import Config
+from tests.config import Config
 from mjooln import File, FileError, Folder, FolderError, Volume, VolumeError
 
 cfg = Config.get()

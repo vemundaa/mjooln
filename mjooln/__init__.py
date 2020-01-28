@@ -1,4 +1,3 @@
-from mjooln.config import Config
 from mjooln.core.zulu import Zulu, ZuluStrings, ZuluError
 from mjooln.core.identity import Identity, IdentityError
 from mjooln.core.key import Key, KeyFormatError
