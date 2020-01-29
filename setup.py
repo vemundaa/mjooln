@@ -1,17 +1,16 @@
 from distutils.core import setup
 setup(
   name='mjooln',
-  packages=['mjooln'],
-  version='0.1',
+  packages=['mjooln', 'mjooln.core', 'mjooln.file'],
+  version='0.3',
   license='MIT',
   description='Environmentally Friendly File Handling',
   author='Vemund Halmø Aarstrand',
   author_email='vemundaa@gmail.com',
   url='https://github.com/vemundaa/mjooln',
-  download_url='https://github.com/vemundaa/mjooln/archive/v_01.tar.gz',
+  download_url='https://github.com/vemundaa/mjooln/archive/v_03.tar.gz',
   keywords=['os', 'path', 'file', 'folder', 'file handling'],
   install_requires=[
-      'pytest',
       'python-dateutil',
       'pytz',
       'simplejson',
