@@ -5,17 +5,14 @@ import shutil
 import random
 import string
 import hashlib
-import base64
-from cryptography.fernet import Fernet
-from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives import hashes
-from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 
-
+from mjooln.core.crypt import AES
 from mjooln.file.path import Path
 from mjooln.file.folder import Folder
 
 logger = logging.getLogger(__name__)
+
+# TODO: Read from gz and encrypted directly
 
 
 class File(Path):
@@ -30,26 +27,6 @@ class File(Path):
     def join(cls, *args):
         # Purely cosmetic for IDE
         return super().join(*args)
-
-    @classmethod
-    def salt(cls):
-        return os.urandom(16)
-
-    @classmethod
-    def key_from_password(cls, salt, password):
-        password = password.encode()  # Convert to type bytes
-        kdf = PBKDF2HMAC(
-            algorithm=hashes.SHA256(),
-            length=32,
-            salt=salt,
-            iterations=100000,
-            backend=default_backend()
-        )
-        return base64.urlsafe_b64encode(kdf.derive(password))
-
-    @classmethod
-    def generate_key(cls):
-        return Fernet.generate_key()
 
     @classmethod
     def elf(cls, file,
@@ -188,8 +165,7 @@ class File(Path):
         logger.debug(f'Encrypt file: {self}')
         encrypted_file = File(self + '.' + self.ENCRYPTED_EXTENSION)
         data = self.read(mode='rb')
-        fernet = Fernet(key)
-        encrypted = fernet.encrypt(data)
+        encrypted = AES.encrypt(data, key)
         encrypted_file.write(encrypted, mode='wb')
         if delete_original:
             self.delete()
@@ -204,8 +180,7 @@ class File(Path):
         logger.debug(f'Decrypt file: {self}')
         decrypted_file = File(self.replace('.' + self.ENCRYPTED_EXTENSION, ''))
         data = self.read(mode='rb')
-        fernet = Fernet(key)
-        decrypted = fernet.decrypt(data)
+        decrypted = AES.decrypt(data, key)
         decrypted_file.write(decrypted, mode='wb')
         if delete_original:
             self.delete()

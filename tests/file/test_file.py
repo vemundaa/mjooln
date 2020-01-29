@@ -1,7 +1,7 @@
 import pytest
 
 from tests.config import Config
-from mjooln import File, FileError, Folder, FolderError, Volume, VolumeError
+from mjooln import File, FileError, Folder, FolderError, Volume, VolumeError, AES
 
 cfg = Config.get()
 
@@ -184,7 +184,7 @@ def test_encrypt(tmp_files):
     extension = tmp_file.extension()
     assert extension == 'txt'
     assert not tmp_file.is_encrypted()
-    key = tmp_file.generate_key()
+    key = AES.generate_key()
     efile = tmp_file.encrypt(key)
     assert efile.extension() == 'txt'
     assert efile.is_encrypted()
@@ -200,13 +200,13 @@ def test_encrypt(tmp_files):
     extension = tmp_file.extension()
     assert extension == 'txt'
     assert not tmp_file.is_encrypted()
-    salt = File.salt()
-    key = File.key_from_password(salt, 'test')
+    salt = AES.salt()
+    key = AES.key_from_password(salt, 'test')
     efile = tmp_file.encrypt(key)
     assert efile.extension() == 'txt'
     assert efile.is_encrypted()
 
-    key = File.key_from_password(salt, 'test')
+    key = AES.key_from_password(salt, 'test')
     dfile = efile.decrypt(key)
     assert not dfile.is_compressed()
     assert dfile.extension() == 'txt'
