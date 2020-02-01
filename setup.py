@@ -6,7 +6,7 @@ with open('README.md') as f:
 setup(
     name='mjooln',
     packages=['mjooln', 'mjooln.core', 'mjooln.file'],
-    version='0.3.1',
+    version='0.3.2',
     license='MIT',
     description='Environmentally Friendly File Handling',
     long_description=long_description,
@@ -14,7 +14,7 @@ setup(
     author='Vemund Halmø Aarstrand',
     author_email='vemundaa@gmail.com',
     url='https://github.com/vemundaa/mjooln',
-    download_url='https://github.com/vemundaa/mjooln/archive/v_031.tar.gz',
+    download_url='https://github.com/vemundaa/mjooln/archive/v_032.tar.gz',
     keywords=['os', 'path', 'file', 'folder', 'file handling'],
     install_requires=[
         'python-dateutil',
