@@ -1,6 +1,7 @@
 import os
 import base64
 from cryptography.fernet import Fernet
+from cryptography.fernet import InvalidToken
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
@@ -46,10 +47,16 @@ class AES(Crypt):
 
     @classmethod
     def decrypt(cls, data, key):
+        # TODO: Catch InvalidToken error
         if not type(data) == bytes:
             raise CryptError('Cannot encrypt data. Data is not bytes')
         if not type(key) == bytes:
             raise CryptError('Cannot decrypt data. Key is not bytes')
         fernet = Fernet(key)
-        return fernet.decrypt(data)
+        try:
+            return fernet.decrypt(data)
+        except InvalidToken as it:
+            raise CryptError(f'Invalid token. Probably due to invalid password or key. '
+                             f'Actual message: {it}')
+
 
