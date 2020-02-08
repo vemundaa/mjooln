@@ -141,13 +141,14 @@ class Path(str):
 
 
 class Volume(Path):
+    # TODO: Remove Volume class?
 
     @classmethod
-    def elf(cls, volume):
-        if isinstance(volume, Volume):
-            return volume
+    def elf(cls, path, **kwargs):
+        if isinstance(path, Volume):
+            return path
         else:
-            return cls(volume)
+            return cls(path)
 
     def __new__(cls, path_str):
         # TODO: Add handling of network drive. Check if exists instead.

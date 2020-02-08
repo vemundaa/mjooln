@@ -15,7 +15,7 @@ class Folder(Path):
         return super().join(*args)
 
     @classmethod
-    def elf(cls, folder):
+    def elf(cls, folder, **kwargs):
         if isinstance(folder, Folder):
             return folder
         else:
@@ -53,6 +53,9 @@ class Folder(Path):
 
     def append(self, *args):
         return Folder.join(self, *args)
+
+    def branch(self, branch):
+        return Folder.join(self, '/'.join(branch))
 
     def is_empty(self):
         if self.exists():
