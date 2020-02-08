@@ -20,7 +20,7 @@ class JSON:
 
 class Dic:
 
-    IGNORE_STARTSWITH = '__'
+    IGNORE_STARTSWITH = '_'
 
     def add_dic(self, dic):
         for key, item in dic.items():
@@ -35,12 +35,18 @@ class Dic:
         return dic
 
     def dev_print(self):
-        text = '--' + f'  [{type(self).__name__}]  '
+        text = '--' + f'  [[ {type(self).__name__} ]]  '
         text += (80-len(text)) * '-'
         print(text)
-        for key, item in self.dic().items():
-            print(f'{key}: {item} [{type(item).__name__}]')
+        self._dev_print(self.dic(), level=0)
         print(80*'-')
+
+    def _dev_print(self, dic, level=0):
+        for key, item in dic.items():
+            if isinstance(item, dict):
+                self._dev_print(item, level=level+1)
+            else:
+                print(level*'  ' + f'{key} [{type(item).__name__}]: {item} ')
 
     @classmethod
     def _from_strings(cls, dic):
@@ -82,7 +88,7 @@ class Doc(Dic):
         return JSON.dumps(dic)
 
 
-class SampleDictable(Dic):
+class SampleDic(Dic):
 
     def __init__(self):
         self._hide = 'test'
@@ -104,17 +110,21 @@ class SampleDoc(Doc):
         self.d = {
             'date': Zulu(),
             'cont': 'yo',
+            'sub': {
+                'hello': 'fefe',
+                'there': 5,
+            }
         }
 
 
 if __name__ == '__main__':
-    dic = SampleDictable()
+    dic = SampleDic()
     dic.dev_print()
-
+    print(80*'#')
     doc = SampleDoc()
     doc.dev_print()
-    print(doc.doc())
+    print(80*'#')
     dd = Doc()
-    dd.add_dic(doc.doc())
+    dd.add_doc(doc.doc())
     dd.dev_print()
 
