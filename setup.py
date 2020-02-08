@@ -15,7 +15,7 @@ setup(
     author_email='vemundaa@gmail.com',
     url='https://github.com/vemundaa/mjooln',
     download_url='https://github.com/vemundaa/mjooln/archive/v_032.tar.gz',
-    keywords=['os', 'path', 'file', 'folder', 'file handling'],
+    keywords=['os', 'path', 'file', 'folder', 'file handling', 'encryption', 'compression'],
     install_requires=[
         'python-dateutil',
         'pytz',
