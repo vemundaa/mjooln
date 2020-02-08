@@ -110,6 +110,12 @@ class Zulu(datetime.datetime):
         return maybe_zulu_string
 
     @classmethod
+    def from_unaware(cls, datetime_unaware):
+        timestamp = datetime_unaware.\
+                         replace(tzinfo=pytz.utc)
+        return cls(timestamp)
+
+    @classmethod
     def from_unaware_local(cls, datetime_local_unaware):
         datetime_local = datetime_local_unaware.\
                          replace(tzinfo=dateutil.tz.tzlocal())
