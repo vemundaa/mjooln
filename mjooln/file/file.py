@@ -208,6 +208,20 @@ class File(Path):
         paths = self.list()
         return [File(x) for x in paths if x.is_file()]
 
+    def elf_move(self, new_path):
+        file = self
+        new_path = Path.elf(new_path)
+        if new_path.is_file():
+            new_path = File.elf(new_path)
+            file = file.rename(new_path.name())
+            file = file.move(new_path.folder())
+        elif new_path.is_folder():
+            new_path = Folder.elf(new_path)
+            file = file.move(new_path)
+        else:
+            raise FileError(f'Cannot move to invalid path: {new_path}')
+        return file
+
     def move(self, new_folder):
         new_folder.touch()
         new_file = File.join(new_folder, self.name())
