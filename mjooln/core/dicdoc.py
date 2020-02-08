@@ -1,7 +1,8 @@
 import json
 import simplejson
 
-from mjooln import Zulu, Segment
+from mjooln.core.zulu import Zulu
+from mjooln.core.segment import Segment
 
 
 class JSON:
@@ -18,14 +19,26 @@ class JSON:
         return simplejson.loads(json_string)
 
 
+class DicDocError(Exception):
+    pass
+
+
 class Dic:
 
     IGNORE_STARTSWITH = '_'
 
-    def add_dic(self, dic):
+    def add_dic(self, dic, existing_only=False, force_equal=False):
+        if existing_only and force_equal:
+            raise DicDocError('Cannot both set existing keys only, and force equal '
+                              'at the same time.')
         for key, item in dic.items():
             if not key.startswith(self.IGNORE_STARTSWITH):
-                self.__setattr__(key, item)
+                if not existing_only or hasattr(self, key):
+                    self.__setattr__(key, item)
+        if force_equal:  # Delete attributes not in input dictionary
+            for key in self.dic():
+                if key not in dic:
+                    self.__delattr__(key)
 
     def dic(self):
         dic = vars(self).copy()
