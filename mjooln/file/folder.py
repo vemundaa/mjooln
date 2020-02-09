@@ -21,7 +21,7 @@ class Folder(Path):
         else:
             return super(Folder, cls).elf(folder)
 
-    def __new__(cls, path_str):
+    def __new__(cls, path_str, **kwargs):
         instance = super(Folder, cls).__new__(cls, path_str)
         # if cls.RESERVED in instance:
         #     raise FolderError(f'Folder path cannot contain \'{cls.RESERVED}\''
@@ -52,10 +52,14 @@ class Folder(Path):
         return Folder(os.path.dirname(self))
 
     def append(self, *args):
-        return Folder.join(self, *args)
-
-    def branch(self, branch):
-        return Folder.join(self, '/'.join(branch))
+        if len(args) == 1:
+            arg = args[0]
+            if isinstance(arg, list):
+                return Folder.join(self, '/'.join(arg))
+            else:
+                return Folder.join(self, arg)
+        else:
+            return Folder.join(self, *args)
 
     def is_empty(self):
         if self.exists():
