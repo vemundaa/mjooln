@@ -27,18 +27,26 @@ class Dic:
 
     IGNORE_STARTSWITH = '_'
 
-    def add_dic(self, dic, existing_only=False, force_equal=False):
-        if existing_only and force_equal:
-            raise DicDocError('Cannot both set existing keys only, and force equal '
-                              'at the same time.')
+    @classmethod
+    def default(cls):
+        return cls().dic()
+
+    def add_dic(self, dic):
         for key, item in dic.items():
             if not key.startswith(self.IGNORE_STARTSWITH):
-                if not existing_only or hasattr(self, key):
+                self.__setattr__(key, item)
+
+    def add_only_existing(self, dic):
+        for key, item in dic.items():
+            if not key.startswith(self.IGNORE_STARTSWITH):
+                if hasattr(self, key):
                     self.__setattr__(key, item)
-        if force_equal:  # Delete attributes not in input dictionary
-            for key in self.dic():
-                if key not in dic:
-                    self.__delattr__(key)
+
+    def force_equal(self, dic):
+        self.add_dic(dic)
+        for key in self.dic():
+            if key not in dic:
+                self.__delattr__(key)
 
     def dic(self):
         dic = vars(self).copy()

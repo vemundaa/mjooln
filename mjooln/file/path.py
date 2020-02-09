@@ -61,8 +61,8 @@ class Path(str):
         else:
             return cls(path)
 
-    def __new__(cls, path_str):
-        # TODO: Try to return instance if exists
+    def __new__(cls, path_str, **kwargs):
+        # TODO: Remove? Since inherits string, it should not matter.
         if not isinstance(path_str, str):
             raise PathError(f'Input to constructor must be string, '
                             f'use elf() method for a softer approach.')

@@ -38,7 +38,7 @@ class File(Path):
                           should_be_encrypted=should_be_encrypted,
                           key=key)
 
-    def __new__(cls, path_str):
+    def __new__(cls, path_str, **kwargs):
         instance = Path.__new__(cls, path_str)
         if instance.exists():
             if instance.is_volume():
