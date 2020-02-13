@@ -107,9 +107,9 @@ class Root(Folder, Doc):
 
 
 if __name__ == '__main__':
-    root_folder = Folder('/Users/vemundaa/dev/data/tenoone/test_tree3')
+    root_folder = Folder('/Users/vemundaa/dev/data/tenoone/test_tree4')
     print(root_folder)
-    root = Root.plant(root_folder, {'hey': 'there'})
+    root = Root.plant(root_folder, hey='there')
     root.dev_print()
     root = Root(root_folder)
     root.dev_print()

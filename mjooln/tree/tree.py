@@ -1,8 +1,8 @@
-from mjooln import Doc, Root
+import logging
 
-from mjooln.tree.branch import Branch
-from mjooln.tree.leaf import Leaf
+from mjooln import Root, Segment
 
+logger = logging.getLogger(__name__)
 
 # TODO: Tree should handle the different trees
 # TODO: Separate branch class to handle the subfolder thing only from segments
@@ -17,27 +17,48 @@ from mjooln.tree.leaf import Leaf
 class Tree(Root):
 
     @classmethod
-    def plant(cls,
-              folder,
-              branch=Branch.default()):
-        instance = super(Tree, cls).plant(folder,
-                                          branch=branch)
-        return instance
+    def plant(cls, folder,
+              type='tree',
+              compression=False,
+              encryption=False,
+              key_levels=1,
+              date_levels=1,
+              time_levels=0,
+              **kwargs):
+        return super(Tree, cls).plant(folder,
+                                      type=type,
+                                      compression=compression,
+                                      encryption=encryption,
+                                      key_levels=key_levels,
+                                      time_levels=time_levels,
+                                      **kwargs)
 
     def __init__(self, folder):
         self.type = None
-        self.branch = None
+        self.compression = False
+        self.encryption = False
+        self.key_levels = 1
+        self.date_levels = 1
+        self.time_levels = 0
         super(Tree, self).__init__(folder)
-        self.branch = Branch(self.branch)
-    #
-    # def grow(self, source_file, delete_source=False):
-    #     return Leaf.grow(self, source_file, delete_source=delete_source)
-    #
-    # def folder(self, segment):
-    #     branches = segment.branches(key_levels=self.key_levels,
-    #                                 date_levels=self.date_levels,
-    #                                 time_levels=self.time_levels)
-    #     return self.branch(branches)
+
+    def branch(self, segment):
+        levels = segment.levels(key_levels=self.key_levels,
+                                date_levels=self.date_levels,
+                                time_levels=self.time_levels)
+        return self.append(levels)
+
+    def grow(self, source_file, delete_source=False):
+        if not source_file.exists():
+            raise TreeError(f'Cannot grow Leaf from non existent '
+                            f'source file: {source_file}')
+        segment = Segment(source_file.stub())
+        folder = self.branch(segment)
+        if delete_source:
+            file = source_file.move(folder)
+        else:
+            file = source_file.copy(folder)
+        logger.debug(f'Added leaf at: {file}')
 
     def reshape(self, wood):
         # TODO: IMplement
@@ -57,35 +78,11 @@ class TreeError(Exception):
 
 
 if __name__ == '__main__':
-    from mjooln import Folder, Segment, TextFile
-    from mjooln import Zulu
-    f = Folder('/Users/vemundaa/dev/data/tenoone/tests/tree_test')
-    try:
-        t = Tree(f)
-        t.up()
-    except:
-        pass
-    tree = Tree.plant(f, key_levels=2, date_levels=1, time_levels=0)
+    from mjooln import Folder
+    root_folder = Folder('/Users/vemundaa/dev/data/tenoone/test_tree4')
+    print(root_folder)
+    tree = Tree.plant(root_folder, hey='there')
     tree.dev_print()
-
-    print(tree)
-    zulus = Zulu.range()
-    segs = [Segment(key='dummy__tester', zulu=x) for x in zulus]
-    for s in segs:
-        print(s)
-
-    folders = [tree.folder(x) for x in segs]
-    for p in folders:
-        print(p)
-
-    files = []
-    for p,s in zip(folders, segs):
-        pp = TextFile.join(p, str(s) + '.txt')
-        f = TextFile.dev_create_sample(pp)
-        files.append(f)
-    # s = Segment(key='dummy_tester')
-    # print(w.branch(s))
-    # f = w.field()
-    # print(f)
-
-    tree.up(force=True)
+    tree = Tree(root_folder)
+    tree.dev_print()
+    tree.uproot(force=True)
