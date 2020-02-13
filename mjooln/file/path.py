@@ -35,7 +35,7 @@ class Path(str):
 
     @classmethod
     def mountpoints(cls):
-        return [x.mountpoint for x in psutil.disk_partitions(all=True)]
+        return [x.mountpoint.replace('\\', '/') for x in psutil.disk_partitions(all=True)]
 
     @classmethod
     def has_valid_mountpoint(cls, path_str):
