@@ -1,12 +1,12 @@
 from distutils.core import setup
 
-with open('README.md') as f:
+with open('README') as f:
     long_description = f.read()
 
 setup(
     name='mjooln',
     packages=['mjooln', 'mjooln.core', 'mjooln.file'],
-    version='0.3.2',
+    version='0.3.4',
     license='MIT',
     description='Environmentally Friendly File Handling',
     long_description=long_description,
@@ -14,7 +14,7 @@ setup(
     author='Vemund Halmø Aarstrand',
     author_email='vemundaa@gmail.com',
     url='https://github.com/vemundaa/mjooln',
-    download_url='https://github.com/vemundaa/mjooln/archive/v_032.tar.gz',
+    download_url='https://github.com/vemundaa/mjooln/archive/v_034.tar.gz',
     keywords=['os', 'path', 'file', 'folder', 'file handling', 'encryption', 'compression'],
     install_requires=[
         'python-dateutil',
