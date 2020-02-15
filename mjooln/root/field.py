@@ -48,10 +48,10 @@ class Field(Root):
                              f'This probably means you\'ve tried to settle '
                              f'a field in an existing root.')
 
-    def plant_root(self, key):
+    def plant_root(self, key, **kwargs):
         key = Key(key)
         folder = self.append(key)
-        return Root.plant(folder)
+        return Root.plant(folder, **kwargs)
 
     def root(self, key):
         key = Key(key)
