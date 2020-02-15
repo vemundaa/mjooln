@@ -1,6 +1,6 @@
 import logging
 
-from mjooln import Root, Segment
+from mjooln import Root, Segment, SegmentError
 
 logger = logging.getLogger(__name__)
 
@@ -19,10 +19,10 @@ class Tree(Root):
     @classmethod
     def plant(cls, folder,
               type='tree',
-              compression=False,
-              encryption=False,
-              key_levels=1,
-              date_levels=1,
+              compression=None,
+              encryption=None,
+              key_levels=0,
+              date_levels=0,
               time_levels=0,
               **kwargs):
         return super(Tree, cls).plant(folder,
@@ -35,10 +35,10 @@ class Tree(Root):
 
     def __init__(self, folder):
         self.type = None
-        self.compression = False
-        self.encryption = False
-        self.key_levels = 1
-        self.date_levels = 1
+        self.compression = None
+        self.encryption = None
+        self.key_levels = 0
+        self.date_levels = 0
         self.time_levels = 0
         super(Tree, self).__init__(folder)
 
@@ -52,7 +52,13 @@ class Tree(Root):
         if not source_file.exists():
             raise TreeError(f'Cannot grow Leaf from non existent '
                             f'source file: {source_file}')
-        segment = Segment(source_file.stub())
+        if not source_file.is_file():
+            raise TreeError(f'Source is not a file: {source_file}')
+        try:
+            segment = Segment(source_file.stub())
+        except SegmentError as se:
+            raise TreeError(f'File name is not a valid segment: {source_file.name()}') from se
+
         folder = self.branch(segment)
         if delete_source:
             file = source_file.move(folder)

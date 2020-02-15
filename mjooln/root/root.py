@@ -9,6 +9,10 @@ class RootError(Exception):
     pass
 
 
+class NotARootException(RootError):
+    pass
+
+
 # TODO: Rewrite root as file?
 class Root(Folder, Doc):
     """ Combination of a folder and a file that defines a particular spot in the file system.
@@ -32,11 +36,19 @@ class Root(Folder, Doc):
         return File.join(folder, cls._file_name(folder))
 
     @classmethod
+    def home(cls):
+        return cls(Folder.home())
+
+    @classmethod
     def plant(cls, folder, **kwargs):
         if folder.exists():
             raise RootError(f'Cannot plant root in existing folder: {folder}. '
                             f'Empty and remove folder first. Or use a different folder.')
-        folder.create()
+        cls.plant_with_force(folder, **kwargs)
+
+    @classmethod
+    def plant_with_force(cls, folder, **kwargs):
+        folder.touch()
         file = cls._file(folder)
         doc = Doc()
         doc.key = folder.name()
@@ -69,16 +81,19 @@ class Root(Folder, Doc):
             return cls.plant(folder, dic=dic)
 
     def __init__(self, folder):
+        folder = Folder.elf(folder)
         if not folder.exists():
-            raise RootError(f'Folder does not exists: {folder}')
+            raise NotARootException(f'Folder does not exists: {folder}')
+        if not self._file(folder).exists():
+            raise NotARootException(f'Description file does not exist: {self._file(folder)}')
         Folder.__init__(self)
         self.key = None
         self.read()
         if self.key != folder.name():
-            raise RootError(f'Key/folder mismatch. '
-                            f'key={self.key}, '
-                            f'folder={folder.name()}, '
-                            f'path={self}')
+            raise NotARootException(f'Key/folder mismatch. '
+                                    f'key={self.key}, '
+                                    f'folder={folder.name()}, '
+                                    f'path={self}')
 
     def write(self):
         file = self._file(self)
