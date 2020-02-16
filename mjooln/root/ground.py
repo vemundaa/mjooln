@@ -4,25 +4,30 @@ from mjooln import Key, Root, Folder, RootError
 # TODO: Field should inherit RootFolder, and handle the different types of root.
 # TODO: A field can have split trees (identical, indexed, and with randomized where each leaf is)
 
+# TODO: Ground and Root reversed dependency?
 
-class FieldError(Exception):
+
+class GroundError(Exception):
     pass
 
 
-class Field(Root):
+class Ground(Root):
+
+    GROUND = 'ground'
+    SPECIES = GROUND
 
     @classmethod
     def plant(cls, folder, **kwargs):
-        raise FieldError('Cannot plant a field. Use \'settle\'. '
-                         'When settled, you can plant roots in a field '
-                         'using \'plant_root\', with key (root name) '
-                         'as input.')
+        raise GroundError('Cannot plant ground. Use \'settle\'. '
+                          'When settled, you can plant roots in a field '
+                          'using \'plant_root\', with key (root name) '
+                          'as input.')
 
     @classmethod
     def settle(cls, folder, name='', **kwargs):
         if cls._file(folder).exists():
             return cls(folder)
-        return super().plant_with_force(folder, type='field', given_name=name, **kwargs)
+        return super().plant_with_force(folder, species='ground', given_name=name, **kwargs)
 
     @classmethod
     def settle_at_home(cls):
@@ -39,14 +44,20 @@ class Field(Root):
             return super().name()
 
     def __init__(self, folder):
-        self.type = None
         self.given_name = ''
         Root.__init__(self, folder)
-        if not self.type == 'field':
-            raise FieldError(f'Root is not a field. Type mismatch. '
-                             f'Should be \'field\', but is \'{self.type}\'. '
+        if not self.species == 'ground':
+            raise GroundError(f'Root is not ground; species mismatch. '
+                             f'Should be \'{self.SPECIES}\', but is \'{self.species}\'. '
                              f'This probably means you\'ve tried to settle '
-                             f'a field in an existing root.')
+                             f'ground in an existing root, which is just '
+                              f'absurd.')
+
+    def unsettle(self):
+        self._file(self).delete()
+
+    def uproot(self, force=False, key=None):
+        raise GroundError('Cannot uproot ground. Use \'unsettle\'.')
 
     def plant_root(self, key, **kwargs):
         key = Key(key)
@@ -71,7 +82,7 @@ class Field(Root):
 
 
 if __name__ == '__main__':
-    field = Field.home()
+    field = Ground.home()
     field.dev_print()
     # r1 = field.plant_root('test1')
     # r2 = field.plant_root('test2')

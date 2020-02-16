@@ -11,3 +11,4 @@ from mjooln.file.folder import Folder, FolderError
 from mjooln.file.document import Document, DocumentError
 
 from mjooln.root.root import Root, RootError
+from mjooln.root.ground import Ground, GroundError

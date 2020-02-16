@@ -4,21 +4,24 @@ from mjooln import Root, Segment, SegmentError
 
 logger = logging.getLogger(__name__)
 
-# TODO: Tree should handle the different trees
-# TODO: Separate branch class to handle the subfolder thing only from segments
-# TODO: It should not be necessary to use segments in file names. Should have key as well. IE regular name
-# TODO: A tree can also be flat. IE no branches.
-# TODO: Tree has a root (file, mongo or other), branch (levels or none) and leaf (csv, h5, json, text, other)
-# TODO: A regular file has only key and name.
-# TODO: Segment file has specific name.
-# TODO: Branch handles key or segment_key
-
 
 class Tree(Root):
 
+    TREE = 'tree'
+    SPECIES = TREE
+
+    @classmethod
+    def is_tree(cls, folder):
+        file = cls._file(folder)
+        if not file.exists():
+            return False
+        root = Root(folder)
+        try:
+            if root.species == cls.TREE
+
     @classmethod
     def plant(cls, folder,
-              type='tree',
+              type=TREE,
               compression=None,
               encryption=None,
               key_levels=0,

@@ -27,6 +27,9 @@ class Root(Folder, Doc):
      -
     """
 
+    ROOT = 'root'
+    SPECIES = ROOT
+
     @classmethod
     def _file_name(cls, folder):
         return '.' + folder.name() + '.json'
@@ -87,7 +90,8 @@ class Root(Folder, Doc):
         if not self._file(folder).exists():
             raise NotARootException(f'Description file does not exist: {self._file(folder)}')
         Folder.__init__(self)
-        self.key = None
+        self.key = ''
+        self.species = ''
         self.read()
         if self.key != folder.name():
             raise NotARootException(f'Key/folder mismatch. '
