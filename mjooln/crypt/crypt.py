@@ -71,7 +71,7 @@ class AES(Crypt):
         try:
             return fernet.decrypt(data)
         except InvalidToken as it:
-            raise CryptError(f'Invalid token. Probably due to invalid password or key. '
+            raise CryptError(f'Invalid token. Probably due to invalid password/key. '
                              f'Actual message: {it}')
 
 

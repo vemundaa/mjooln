@@ -33,9 +33,6 @@ class Folder(Path):
                 raise FolderError(f'Path is a file, not a folder: {str(instance)}')
         return instance
 
-    def name(self):
-        return os.path.basename(self)
-
     def create(self, error_if_exists=True):
         if not self.exists():
             os.makedirs(self)
@@ -46,7 +43,7 @@ class Folder(Path):
             return False
 
     def touch(self):
-        return self.create(error_if_exists=False)
+        self.create(error_if_exists=False)
 
     def parent(self):
         return Folder(os.path.dirname(self))
@@ -67,6 +64,16 @@ class Folder(Path):
         else:
             raise FolderError(f'Cannot check if non existent folder is empty: {self}')
 
+    def disk_usage(self):
+        if self.exists():
+            paths = self.glob(recursive=True)
+            size = 0
+            for path in paths:
+                size += path.size()
+            return size
+        else:
+            raise FolderError(f'Cannot determine disk usage of non existent folder: {self}')
+
     def empty(self):
         if self.exists():
             for name in os.listdir(self):
@@ -83,10 +90,6 @@ class Folder(Path):
             os.rmdir(self)
         else:
             raise FolderError(f'Cannot remove a non existent folder: {self}')
-
-    def folders(self):
-        paths = self.list()
-        return [Folder(x) for x in paths if x.is_folder()]
 
 
 class FolderError(Exception):

@@ -28,7 +28,7 @@ def test_exists_only():
     d.a = 2
     d.b = 3
     d.c = 4
-    d._add_dic({'b': 5, 'bb': 6}, existing_only=True)
+    d.add_only_existing({'b': 5, 'bb': 6})
     assert d.dic() == {'a': 2, 'b': 5, 'c': 4}
 
 
@@ -37,7 +37,7 @@ def test_force_match():
     d.a = 2
     d.b = 3
     d.c = 4
-    d._add_dic({'a': 5, 'b': 6}, force_equal=True)
+    d.force_equal({'a': 5, 'b': 6})
     assert d.dic() == {'a': 5, 'b': 6}
 
 

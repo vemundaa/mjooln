@@ -5,15 +5,10 @@ from mjooln import Doc, File, Folder
 logger = logging.getLogger(__name__)
 
 
-class FolderDocError(Exception):
+class DocFolderError(Exception):
     pass
 
 
-class NotAFolderDocException(FolderDocError):
-    pass
-
-
-# TODO: Rewrite root as file?
 class DocFolder(Doc):
     """ Combination of a folder and a json file containing the attributes of the object.
 

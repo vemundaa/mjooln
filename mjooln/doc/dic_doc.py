@@ -2,7 +2,7 @@ import json
 import simplejson
 
 from mjooln.core.zulu import Zulu
-from mjooln.core.segment import Segment
+from mjooln.segment.segment import Segment
 
 
 class JSON:

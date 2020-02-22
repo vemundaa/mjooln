@@ -6,7 +6,7 @@ import random
 import string
 import hashlib
 
-from mjooln.core.crypt import AES
+from mjooln.crypt.crypt import AES
 from mjooln.path.path import Path
 from mjooln.path.folder import Folder
 
@@ -128,63 +128,6 @@ class File(Path):
                 md5.update(chunk)
         return md5.hexdigest()
 
-    def elfer(self,
-              should_be_compressed=None,
-              should_be_encrypted=None,
-              key=None):
-        tmp = self
-        if should_be_compressed is not None:
-            if should_be_compressed:
-                tmp = tmp.elf_compress(key=key)
-            else:
-                tmp = tmp.elf_decompress(key=key)
-        if should_be_encrypted is not None:
-            if should_be_encrypted:
-                tmp = tmp.elf_encrypt(key=key)
-            else:
-                tmp = tmp.elf_decrypt(key=key)
-        return tmp
-
-    def elf_encrypt(self, key):
-        if self.is_encrypted():
-            return self
-        else:
-            return self.encrypt(key)
-
-    def elf_decrypt(self, key):
-        if not self.is_encrypted():
-            return self
-        else:
-            return self.decrypt(key)
-
-    def elf_compress(self, key=None):
-        if self.is_compressed():
-            return self
-        else:
-            if self.is_encrypted():
-                if not key:
-                    raise FileError(f'Need to decrypt/encrypt in order to compress file. '
-                                    f'Cannot do that without a key.')
-                tmp = self.decrypt(key)
-                tmp = tmp.compress()
-                return tmp.encrypt(key)
-            else:
-                return self.compress()
-
-    def elf_decompress(self, key=None):
-        if not self.is_compressed():
-            return self
-        else:
-            if self.is_encrypted():
-                if not key:
-                    raise FileError(f'Need to decrypt/encrypt in order to decompress file. '
-                                    f'Cannot do that without a key.')
-                tmp = self.decrypt(key)
-                tmp = tmp.decompress()
-                return tmp.encrypt(key)
-
-            return self.compress()
-
     def encrypt(self, key, delete_original=True):
         if not self.exists():
             raise FileError(f'Cannot encrypt non existent file: {self}')
@@ -235,20 +178,6 @@ class File(Path):
     def files(self):
         paths = self.list()
         return [File(x) for x in paths if x.is_file()]
-
-    def elf_move(self, new_path):
-        file = self
-        new_path = Path.elf(new_path)
-        if new_path.is_file():
-            new_path = File.elf(new_path)
-            file = file.rename(new_path.name())
-            file = file.move(new_path.folder())
-        elif new_path.is_folder():
-            new_path = Folder.elf(new_path)
-            file = file.move(new_path)
-        else:
-            raise FileError(f'Cannot move to invalid path: {new_path}')
-        return file
 
     def move(self, new_folder):
         new_folder.touch()
