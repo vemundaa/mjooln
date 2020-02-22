@@ -56,7 +56,7 @@ class Root(Folder, Doc):
         doc = Doc()
         doc.key = folder.name()
         if kwargs:
-            doc.add_dic(kwargs)
+            doc._add_dic(kwargs)
         file.write(doc.doc())
         return cls(folder)
 
@@ -105,7 +105,7 @@ class Root(Folder, Doc):
 
     def read(self):
         file = self._file(self)
-        self.add_doc(file.read(mode='r'))
+        self._add_doc(file.read(mode='r'))
 
     def remove(self):
         file = self._file(self)

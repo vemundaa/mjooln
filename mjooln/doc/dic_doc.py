@@ -19,10 +19,6 @@ class JSON:
         return simplejson.loads(json_string)
 
 
-class DicDocError(Exception):
-    pass
-
-
 class Dic:
 
     IGNORE_STARTSWITH = '_'
@@ -31,22 +27,16 @@ class Dic:
     def default(cls):
         return cls().dic()
 
-    def add_dic(self, dic):
-        for key, item in dic.items():
-            if not key.startswith(self.IGNORE_STARTSWITH):
-                self.__setattr__(key, item)
+    def _add_item(self, key, item):
+        if not key.startswith(self.IGNORE_STARTSWITH):
+            self.__setattr__(key, item)
 
-    def add_only_existing(self, dic):
+    def _add_dic(self, dic):
         for key, item in dic.items():
-            if not key.startswith(self.IGNORE_STARTSWITH):
-                if hasattr(self, key):
-                    self.__setattr__(key, item)
+            self._add_item(key, item)
 
-    def force_equal(self, dic):
-        self.add_dic(dic)
-        for key in self.dic():
-            if key not in dic:
-                self.__delattr__(key)
+    def add(self, dic):
+        self._add_dic(dic)
 
     def dic(self):
         dic = vars(self).copy()
@@ -54,6 +44,24 @@ class Dic:
         for key in pop_keys:
             dic.pop(key)
         return dic
+
+    def add_only_existing(self, dic):
+        dic_to_add = {}
+        for key in dic:
+            if hasattr(self, key):
+                dic_to_add[key] = dic[key]
+        self._add_dic(dic_to_add)
+
+        for key, item in dic.items():
+            if not key.startswith(self.IGNORE_STARTSWITH):
+                if hasattr(self, key):
+                    self.__setattr__(key, item)
+
+    def force_equal(self, dic):
+        self._add_dic(dic)
+        for key in self.dic():
+            if key not in dic:
+                self.__delattr__(key)
 
     def dev_print(self):
         text = '--' + f'  [[ {type(self).__name__} ]]  '
@@ -67,7 +75,7 @@ class Dic:
             if isinstance(item, dict):
                 self._dev_print(item, level=level+1)
             else:
-                print(level*'  ' + f'{key} [{type(item).__name__}]: {item} ')
+                print(level*'  ' + f'{key}: [{type(item).__name__}] {item} ')
 
     @classmethod
     def _from_strings(cls, dic):
@@ -88,7 +96,7 @@ class Dic:
             if isinstance(item, Zulu):
                 dic[key] = item.to_iso_string()
             elif isinstance(item, Segment):
-                dic[key] = cls._to_strings(item.dic())
+                dic[key] = cls._to_strings(vars(item))
             elif isinstance(item, dict):
                 dic[key] = cls._to_strings(item)
             elif isinstance(item, Dic):
@@ -96,12 +104,26 @@ class Dic:
         return dic
 
 
+class DocError(Exception):
+    pass
+
+
 class Doc(Dic):
 
-    def add_doc(self, doc):
+    def _add_doc(self, doc):
         dic = JSON.loads(doc)
         dic = self._from_strings(dic)
-        self.add_dic(dic)
+        self._add_dic(dic)
+
+    def add(self, dic_or_doc):
+        if not dic_or_doc:
+            return
+        if isinstance(dic_or_doc, dict):
+            Dic._add_dic(self, dic_or_doc)
+        elif isinstance(dic_or_doc, str):
+            self._add_doc(dic_or_doc)
+        else:
+            raise DocError(f'Input object is neither dic nor doc: {type(dic_or_doc)}')
 
     def doc(self):
         dic = self.dic()
@@ -146,6 +168,6 @@ if __name__ == '__main__':
     doc.dev_print()
     print(80*'#')
     dd = Doc()
-    dd.add_doc(doc.doc())
+    dd.add(doc.doc())
     dd.dev_print()
 

@@ -1,8 +1,8 @@
 import logging
 from logging.handlers import TimedRotatingFileHandler
 
-from mjooln.file.folder import Folder
-from mjooln.file.file import File
+from mjooln.path.folder import Folder
+from mjooln.path.file import File
 
 logger = logging.getLogger(__name__)
 

@@ -2,7 +2,7 @@ import logging
 import os
 import shutil
 
-from mjooln.file.path import Path
+from mjooln.path.path import Path
 
 logger = logging.getLogger(__name__)
 

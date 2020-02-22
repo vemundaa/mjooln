@@ -7,8 +7,8 @@ import string
 import hashlib
 
 from mjooln.core.crypt import AES
-from mjooln.file.path import Path
-from mjooln.file.folder import Folder
+from mjooln.path.path import Path
+from mjooln.path.folder import Folder
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +21,10 @@ class File(Path):
     ENCRYPTED_EXTENSION = 'aes'
     RESERVED_EXTENSIONS = [COMPRESSED_EXTENSION, ENCRYPTED_EXTENSION]
 
-    compression_percent = None
+    _compression_percent = None
+    _hidden = None
+    _encrypted = None
+    _compressed = None
 
     @classmethod
     def join(cls, *args):
@@ -39,16 +42,17 @@ class File(Path):
                           key=key)
 
     def __new__(cls, path_str, **kwargs):
+        # TODO: Raise exception if reserved extensions are used inappropriately
         instance = Path.__new__(cls, path_str)
         if instance.exists():
             if instance.is_volume():
                 raise FileError(f'Path is volume, not file: {path_str}')
             elif instance.is_folder():
                 raise FileError(f'Path is existing folder, not file: {path_str}')
+        instance._hidden = instance.name().startswith('.')
+        instance._compressed = cls.COMPRESSED_EXTENSION in instance.extensions()
+        instance._encrypted = cls.ENCRYPTED_EXTENSION in instance.extensions()
         return instance
-
-    def is_hidden(self):
-        return self.name().startswith('.')
 
     def parts(self):
         parts = self.name().split('.')
@@ -59,11 +63,14 @@ class File(Path):
     def extensions(self):
         return self.parts()[1:]
 
+    def is_hidden(self):
+        return self._hidden
+
     def is_encrypted(self):
-        return self.ENCRYPTED_EXTENSION in self.extensions()
+        return self._encrypted
 
     def is_compressed(self):
-        return self.COMPRESSED_EXTENSION in self.extensions()
+        return self._compressed
 
     def stub(self):
         return self.parts()[0]
@@ -76,20 +83,41 @@ class File(Path):
         elif len(extensions) == 0:
             return None
         else:
+            # TODO: Move this check to instantiation
             raise FileError(f'File has more than one '
                             f'not reserved ({self.RESERVED_EXTENSIONS}) '
                             f'extension ({extensions}): {self}')
 
     def write(self, content, mode='w'):
-        folder = self.folder()
-        folder.touch()
+        self.folder().touch()
         with open(self, mode=mode) as f:
             f.write(content)
+
+    def write_binary(self, content):
+        if not isinstance(content, bytes):
+            content = content.encode()
+        self.write(content, mode='wb')
+
+    def write_text(self, content):
+        if not isinstance(content, str):
+            content = content.decode()
+        self.write(content, mode='wt')
+
+    def append(self, content):
+        if not isinstance(content, str):
+            raise FileError('Cannot append content that is not text (str)')
+        self.write(content, mode='wt+')
 
     def read(self, mode='r'):
         with open(self, mode=mode) as f:
             content = f.read()
         return content
+
+    def read_binary(self):
+        return self.read(mode='rb')
+
+    def read_text(self):
+        return self.read(mode='rt')
 
     def md5_checksum(self):
         if not self.exists():
