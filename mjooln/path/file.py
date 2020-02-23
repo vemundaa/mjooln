@@ -6,7 +6,6 @@ import random
 import string
 import hashlib
 
-from mjooln.crypt.crypt import AES
 from mjooln.path.path import Path
 from mjooln.path.folder import Folder
 
@@ -21,27 +20,20 @@ class File(Path):
     ENCRYPTED_EXTENSION = 'aes'
     RESERVED_EXTENSIONS = [COMPRESSED_EXTENSION, ENCRYPTED_EXTENSION]
 
-    _compression_percent = None
     _hidden = None
     _encrypted = None
     _compressed = None
+
+    _write_mode = 'w'
+    _append_mode = 'w+'
+    _read_mode = 'r'
 
     @classmethod
     def join(cls, *args):
         # Purely cosmetic for IDE
         return super().join(*args)
 
-    @classmethod
-    def elf(cls, file,
-            should_be_compressed=None,
-            should_be_encrypted=None,
-            key=None):
-        file = super().elf(file)
-        return file.elfer(should_be_compressed=should_be_compressed,
-                          should_be_encrypted=should_be_encrypted,
-                          key=key)
-
-    def __new__(cls, path_str, **kwargs):
+    def __new__(cls, path_str, *args, **kwargs):
         # TODO: Raise exception if reserved extensions are used inappropriately
         instance = Path.__new__(cls, path_str)
         if instance.exists():
@@ -86,38 +78,8 @@ class File(Path):
             # TODO: Move this check to instantiation
             raise FileError(f'File has more than one '
                             f'not reserved ({self.RESERVED_EXTENSIONS}) '
-                            f'extension ({extensions}): {self}')
-
-    def write(self, content, mode='w'):
-        self.folder().touch()
-        with open(self, mode=mode) as f:
-            f.write(content)
-
-    def write_binary(self, content):
-        if not isinstance(content, bytes):
-            content = content.encode()
-        self.write(content, mode='wb')
-
-    def write_text(self, content):
-        if not isinstance(content, str):
-            content = content.decode()
-        self.write(content, mode='wt')
-
-    def append(self, content):
-        if not isinstance(content, str):
-            raise FileError('Cannot append content that is not text (str)')
-        self.write(content, mode='wt+')
-
-    def read(self, mode='r'):
-        with open(self, mode=mode) as f:
-            content = f.read()
-        return content
-
-    def read_binary(self):
-        return self.read(mode='rb')
-
-    def read_text(self):
-        return self.read(mode='rt')
+                            f'extensions ({extensions}). '
+                            f'Cannot determine a single extension: {self}')
 
     def md5_checksum(self):
         if not self.exists():
@@ -127,35 +89,6 @@ class File(Path):
             for chunk in iter(lambda: file.read(4096), b""):
                 md5.update(chunk)
         return md5.hexdigest()
-
-    def encrypt(self, key, delete_original=True):
-        if not self.exists():
-            raise FileError(f'Cannot encrypt non existent file: {self}')
-        if self.is_encrypted():
-            raise FileError(f'File is already encrypted: {self}')
-        logger.debug(f'Encrypt file: {self}')
-        encrypted_file = File(self + '.' + self.ENCRYPTED_EXTENSION)
-        data = self.read(mode='rb')
-        encrypted = AES.encrypt(data, key)
-        encrypted_file.write(encrypted, mode='wb')
-        if delete_original:
-            self.delete()
-        return encrypted_file
-
-    def decrypt(self, key, delete_original=True):
-        if not self.exists():
-            raise FileError(f'Cannot decrypt non existent file: {self}')
-        if not self.is_encrypted():
-            raise FileError(f'File is already encrypted: {self}')
-
-        logger.debug(f'Decrypt file: {self}')
-        decrypted_file = File(self.replace('.' + self.ENCRYPTED_EXTENSION, ''))
-        data = self.read(mode='rb')
-        decrypted = AES.decrypt(data, key)
-        decrypted_file.write(decrypted, mode='wb')
-        if delete_original:
-            self.delete()
-        return decrypted_file
 
     def delete(self, missing_ok=False):
         if self.exists():
@@ -167,6 +100,39 @@ class File(Path):
     def name(self):
         return os.path.basename(self)
 
+    def write(self, content, *args, **kwargs):
+        self.folder().touch()
+        if self._compressed:
+            self._write_compressed(content)
+        else:
+            self._write(content)
+
+    def _write(self, content, mode='w'):
+        with open(self, mode=mode) as f:
+            f.write(content)
+
+    def _write_compressed(self, content, mode='wb'):
+        if not isinstance(content, bytes):
+            content = content.encode()
+        with gzip.open(self, mode=mode) as f:
+            f.write(content)
+
+    def read(self, *args, **kwargs):
+        if self._compressed:
+            return self._read_compressed()
+        else:
+            return self._read()
+
+    def _read(self, mode='r'):
+        with open(self, mode=mode) as f:
+            content = f.read()
+        return content
+
+    def _read_compressed(self):
+        with gzip.open(self, mode='rb') as f:
+            content = f.read()
+        return content
+
     def rename(self, new_name):
         new_path = self.join(self.folder(), new_name)
         os.rename(self, new_path)
@@ -175,9 +141,9 @@ class File(Path):
     def folder(self):
         return Folder(os.path.dirname(self))
 
-    def files(self):
-        paths = self.list()
-        return [File(x) for x in paths if x.is_file()]
+    def files(self, pattern='*', recursive=False):
+        files = self.folder().files(pattern='*', recursive=False)
+        return [File(x) for x in files]
 
     def move(self, new_folder):
         new_folder.touch()
@@ -249,37 +215,12 @@ class File(Path):
         return [File(x) for x in paths if x.is_file()]
 
 
-class TextFile(File):
-
-    def write(self, text, mode='wt'):
-        super().write(content=text, mode='wt')
-
-    def append(self, text, mode='at+'):
-        super().write(content=text, mode=mode)
-
-    def read(self, mode='rt'):
-        return super().read(mode='rt')
-
-    @classmethod
-    def new(cls, path, text):
-        file = TextFile.elf(path)
-        if file.exists():
-            raise FileError(f'File already exists: {file}')
-        else:
-            file.write(text=text)
-            return file
-
-    @classmethod
-    def dev_create_sample(cls, path_str, num_chars=1000):
-        text = ''.join(random.choices(string.ascii_uppercase + string.digits + '\n',
-                                      k=num_chars))
-        file = cls(path_str)
-        if not file.exists():
-            file.write(text)
-        else:
-            raise FileError(f'File already exists: {file}')
-        return file
-
-
 class FileError(Exception):
     pass
+
+
+if __name__ == '__main__':
+    f = File('test.txt.gz')
+    print(f)
+    f.write('hello')
+    print(f.read())

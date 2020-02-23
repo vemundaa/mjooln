@@ -61,7 +61,7 @@ class Path(str):
         else:
             return cls(path)
 
-    def __new__(cls, path_str, **kwargs):
+    def __new__(cls, path_str, *args, **kwargs):
         # TODO: Remove? Since inherits string, it should not matter.
         if not isinstance(path_str, str):
             raise PathError(f'Input to constructor must be string, '
@@ -155,8 +155,6 @@ class Path(str):
     def files(self, pattern='*', recursive=False):
         paths = self.glob(pattern=pattern, recursive=recursive)
         return [Path(x) for x in paths if x.is_file()]
-
-
 
 
 class PathError(Exception):

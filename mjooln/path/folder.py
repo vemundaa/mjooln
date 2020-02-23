@@ -14,14 +14,7 @@ class Folder(Path):
         # Purely cosmetic for IDE
         return super().join(*args)
 
-    @classmethod
-    def elf(cls, folder, **kwargs):
-        if isinstance(folder, Folder):
-            return folder
-        else:
-            return super(Folder, cls).elf(folder)
-
-    def __new__(cls, path_str, **kwargs):
+    def __new__(cls, path_str, *args, **kwargs):
         instance = super(Folder, cls).__new__(cls, path_str)
         # if cls.RESERVED in instance:
         #     raise FolderError(f'Folder path cannot contain \'{cls.RESERVED}\''
@@ -94,3 +87,10 @@ class Folder(Path):
 
 class FolderError(Exception):
     pass
+
+
+if __name__ == '__main__':
+    p = Folder.home()
+    print(p)
+    pp = Folder(p)
+    print(pp)
