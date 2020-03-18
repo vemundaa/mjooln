@@ -4,12 +4,11 @@ import os
 import shutil
 import hashlib
 
+from mjooln.crypt.crypt import Crypt
 from mjooln.path.path import Path
 from mjooln.path.folder import Folder
 
 logger = logging.getLogger(__name__)
-
-# TODO: Read from gz and encrypted directly
 
 
 class File(Path):
@@ -18,14 +17,27 @@ class File(Path):
     ENCRYPTED_EXTENSION = 'aes'
     RESERVED_EXTENSIONS = [COMPRESSED_EXTENSION, ENCRYPTED_EXTENSION]
 
+    _salt = b'O89ogfFYLGUts3BM1dat4vcQ'
+
     _hidden = None
     _compressed = None
-    _binary = None
+    _encrypted = None
 
     @classmethod
     def join(cls, *args):
         # Purely cosmetic for IDE
         return super().join(*args)
+
+    @classmethod
+    def key_from_key_or_password(cls, key=None, password=None):
+        if key and password:
+            raise FileError('Use either key or password.')
+        elif not key and not password:
+            raise FileError('Key or password missing')
+        if key:
+            return key
+        else:
+            return Crypt.key_from_password(cls._salt, password)
 
     def __new__(cls, path_str, is_binary=False, *args, **kwargs):
         # TODO: Raise exception if reserved extensions are used inappropriately
@@ -94,37 +106,79 @@ class File(Path):
     def name(self):
         return os.path.basename(self)
 
-    def write(self, content, mode='w', **kwargs):
+    def write(self, data, mode='w', key=None, password=None, **kwargs):
+        # TODO: Require compression if file is encrypted?
+        if self.exists():
+            raise FileError(f'Cannot write to existing file (use append): {self}')
+        if self._encrypted:
+            key = self.key_from_key_or_password(key, password)
         self.folder().touch()
         if self._compressed:
-            self._write_compressed(content, mode=mode)
+            self._write_compressed(data)
+            if self._encrypted:
+                logger.warning('On the fly encrypt/compress not implemented. '
+                               'There is an extra read/write from/to disk. '
+                               'In other words, this is a hack.')
+                # TODO: Refactor to write once, but verify zlib/gzip compatibility
+                data = self._read(mode='rb')
+                data = Crypt.encrypt(data, key)
+                self.delete()
+                self._write(data, mode='wb')
         else:
-            self._write(content, mode=mode)
+            if self._encrypted:
+                if not isinstance(data, bytes):
+                    data = data.encode()
+                data = Crypt.encrypt(data, key)
+                self._write(data, mode='wb')
+            else:
+                self._write(data, mode=mode)
 
-    def _write(self, content, mode='w'):
+    def _write(self, data, mode='w'):
         with open(self, mode=mode) as f:
-            f.write(content)
+            f.write(data)
 
-    def _write_compressed(self, content, mode='wb'):
+    def _write_compressed(self, content):
         if not isinstance(content, bytes):
             content = content.encode()
-        with gzip.open(self, mode=mode) as f:
+        with gzip.open(self, mode='wb') as f:
             f.write(content)
 
-    def read(self, *args, **kwargs):
+    def read(self, mode='r', key=None, password=None, *args, **kwargs):
+        if not self.exists():
+            raise FileError(f'Cannot read from file that does not exist: {self}')
+        if self._encrypted:
+            key = self.key_from_key_or_password(key, password)
         if self._compressed:
-            return self._read_compressed()
+            if self._encrypted:
+                logger.warning('On the fly encrypt/compress not implemented. '
+                               'There is an extra read/write from/to disk. '
+                               'In other words, this is a hack.')
+                # TODO: Refactor to read once, but verify zlib/gzip compatibility
+                data = self._read(mode='rb')
+                self.delete()
+                data = Crypt.decrypt(data, key)
+                self._write(data, mode='wb')
+            data = self._read_compressed(mode=mode)
         else:
-            return self._read()
+            if self._encrypted:
+                data = self._read(mode='rb')
+                data = Crypt.decrypt(data, key)
+                if 'b' not in mode:
+                    data = data.decode()
+            else:
+                data = self._read(mode=mode)
+        return data
 
     def _read(self, mode='r'):
         with open(self, mode=mode) as f:
             content = f.read()
         return content
 
-    def _read_compressed(self):
-        with gzip.open(self, mode='rb') as f:
+    def _read_compressed(self, mode='rb'):
+        with gzip.open(self, mode=mode) as f:
             content = f.read()
+        if 'b' not in mode:
+            content = content.decode()
         return content
 
     def rename(self, new_name):
@@ -157,8 +211,6 @@ class File(Path):
         return new_file
 
     def compress(self, delete_original=True):
-        if not self.exists():
-            raise FileError(f'Cannot compress non existent file: {self}')
         if self.is_compressed():
             raise FileError(f'File already compressed: {self}')
         if self.is_encrypted():
@@ -180,8 +232,6 @@ class File(Path):
         return new_file
 
     def decompress(self, delete_original=True, replace_if_exists=True):
-        if not self.exists():
-            raise FileError(f'Cannot decompress non existent file: {self}')
         if not self.is_compressed():
             raise FileError(f'File is not compressed: {self}')
         if self.is_encrypted():
@@ -203,6 +253,31 @@ class File(Path):
         new_file = File(new_file)
         new_file.compression_percent = None
         return new_file
+
+    def encrypt(self, key, delete_original=True):
+        if self._encrypted:
+            raise FileError(f'File is already encrypted: {self}')
+        logger.debug(f'Encrypt file: {self}')
+        encrypted_file = File(self + '.' + self.ENCRYPTED_EXTENSION)
+        data = self.read(mode='rb')
+        encrypted = Crypt.encrypt(data, key)
+        encrypted_file.write(encrypted, mode='wb')
+        if delete_original:
+            self.delete()
+        return encrypted_file
+
+    def decrypt(self, key, delete_original=True):
+        if not self._encrypted:
+            raise FileError(f'File is already encrypted: {self}')
+
+        logger.debug(f'Decrypt file: {self}')
+        decrypted_file = File(self.replace('.' + self.ENCRYPTED_EXTENSION, ''))
+        data = self.read(mode='rb')
+        decrypted = Crypt.decrypt(data, key)
+        decrypted_file.write(decrypted, mode='wb')
+        if delete_original:
+            self.delete()
+        return decrypted_file
 
     def glob(self, pattern='*', recursive=False):
         paths = super().glob(pattern=pattern, recursive=recursive)
