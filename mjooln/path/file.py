@@ -2,8 +2,6 @@ import gzip
 import logging
 import os
 import shutil
-import random
-import string
 import hashlib
 
 from mjooln.path.path import Path
@@ -21,19 +19,15 @@ class File(Path):
     RESERVED_EXTENSIONS = [COMPRESSED_EXTENSION, ENCRYPTED_EXTENSION]
 
     _hidden = None
-    _encrypted = None
     _compressed = None
-
-    _write_mode = 'w'
-    _append_mode = 'w+'
-    _read_mode = 'r'
+    _binary = None
 
     @classmethod
     def join(cls, *args):
         # Purely cosmetic for IDE
         return super().join(*args)
 
-    def __new__(cls, path_str, *args, **kwargs):
+    def __new__(cls, path_str, is_binary=False, *args, **kwargs):
         # TODO: Raise exception if reserved extensions are used inappropriately
         instance = Path.__new__(cls, path_str)
         if instance.exists():
@@ -100,12 +94,12 @@ class File(Path):
     def name(self):
         return os.path.basename(self)
 
-    def write(self, content, *args, **kwargs):
+    def write(self, content, mode='w', **kwargs):
         self.folder().touch()
         if self._compressed:
-            self._write_compressed(content)
+            self._write_compressed(content, mode=mode)
         else:
-            self._write(content)
+            self._write(content, mode=mode)
 
     def _write(self, content, mode='w'):
         with open(self, mode=mode) as f:
@@ -212,15 +206,8 @@ class File(Path):
 
     def glob(self, pattern='*', recursive=False):
         paths = super().glob(pattern=pattern, recursive=recursive)
-        return [File(x) for x in paths if x.is_file()]
+        return (File(x) for x in paths if x.is_file())
 
 
 class FileError(Exception):
     pass
-
-
-if __name__ == '__main__':
-    f = File('test.txt.gz')
-    print(f)
-    f.write('hello')
-    print(f.read())

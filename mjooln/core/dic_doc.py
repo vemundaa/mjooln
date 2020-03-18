@@ -6,9 +6,18 @@ from mjooln.segment.segment import Segment
 
 
 class JSON:
+    """Dict to/from JSON string, with optional human readable"""
 
     @classmethod
     def dumps(cls, dictionary, human=True, sort_keys=False, indent=4 * ' '):
+        """Convert from dict to JSON string
+
+        :param dictionary: Input dictionary
+        :type dictionary: dict
+        :param human: Human readable flag
+        :param sort_keys: Sort key flag
+        :param indent: Indent to use (human readable only)
+        """
         if human:
             return simplejson.dumps(dictionary, sort_keys=sort_keys, indent=indent)
         else:
@@ -16,10 +25,14 @@ class JSON:
 
     @classmethod
     def loads(cls, json_string):
+        """Convert JSON string to dictionary"""
         return simplejson.loads(json_string)
 
 
 class Dic:
+    """Enables child class to mirror attributes and dictionaries
+
+    Certain classes are converted to/from strings when using JSON conversion"""
 
     IGNORE_STARTSWITH = '_'
 
@@ -109,6 +122,7 @@ class DocError(Exception):
 
 
 class Doc(Dic):
+    """Enables child classes to mirror attributes and JSON strings"""
 
     def _add_doc(self, doc):
         dic = JSON.loads(doc)

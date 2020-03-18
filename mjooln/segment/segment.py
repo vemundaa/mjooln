@@ -53,15 +53,11 @@ class Segment:
     def __str__(self):
         return self.FORMAT.format(self.zulu, self.key, self.identity)
 
-    # def dic(self):
-    #     return {
-    #         'key': self.key,
-    #         'zulu': self.zulu,
-    #         'identity': self.identity,
-    #     }
-
     def parts(self):
         return str(self).split(self.SEPARATOR)
+
+    def custom_separator(self, separator):
+        return separator.join(self.parts())
 
     def levels(self,
                key_levels=1,
@@ -89,17 +85,17 @@ class Segment:
 class SegmentError(Exception):
     pass
 
-
-if __name__ == '__main__':
-    zulu = Zulu()
-    key = Key('t55t')
-    ide = Identity()
-    s = Segment(zulu, key, ide)
-    print(s)
-
-    ss = Segment('20191221T143324u113286Z___t55t___365E5E67_318A_497E_8FE6_7F1CC8974DFF')
-    print(ss)
-
-    s = Segment(key='test_it__again')
-    print(s)
-    print(s.branch(2,1,1))
+#
+# if __name__ == '__main__':
+#     zulu = Zulu()
+#     key = Key('t55t')
+#     ide = Identity()
+#     s = Segment(zulu, key, ide)
+#     print(s)
+#
+#     ss = Segment('20191221T143324u113286Z___t55t___365E5E67_318A_497E_8FE6_7F1CC8974DFF')
+#     print(ss)
+#
+#     s = Segment(key='test_it__again')
+#     print(s)
+#     print(s.branch(2,1,1))

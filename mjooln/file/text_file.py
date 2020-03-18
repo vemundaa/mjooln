@@ -45,7 +45,7 @@ class TextFile(File):
             return file
 
     @classmethod
-    def dev_create_sample(cls, path_str, num_chars=1000):
+    def dev_create_random(cls, path_str, num_chars=1000):
         text = ''.join(random.choices(string.ascii_uppercase + string.digits + '\n',
                                       k=num_chars))
         file = cls(path_str)
