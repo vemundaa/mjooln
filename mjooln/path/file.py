@@ -143,6 +143,9 @@ class File(Path):
         with gzip.open(self, mode='wb') as f:
             f.write(content)
 
+    def tmp(self):
+        return self.join(self.folder(), '.tmp__' + self.name())
+
     def read(self, mode='r', key=None, password=None, *args, **kwargs):
         if not self.exists():
             raise FileError(f'Cannot read from file that does not exist: {self}')
@@ -154,11 +157,11 @@ class File(Path):
                                'There is an extra read/write from/to disk. '
                                'In other words, this is a hack.')
                 # TODO: Refactor to read once, but verify zlib/gzip compatibility
-                data = self._read(mode='rb')
-                self.delete()
-                data = Crypt.decrypt(data, key)
-                self._write(data, mode='wb')
-            data = self._read_compressed(mode=mode)
+                decrypted_file = self.decrypt(key, delete_original=False)
+                data = decrypted_file.read(mode=mode)
+                decrypted_file.delete()
+            else:
+                data = self._read_compressed(mode=mode)
         else:
             if self._encrypted:
                 data = self._read(mode='rb')
@@ -259,9 +262,9 @@ class File(Path):
             raise FileError(f'File is already encrypted: {self}')
         logger.debug(f'Encrypt file: {self}')
         encrypted_file = File(self + '.' + self.ENCRYPTED_EXTENSION)
-        data = self.read(mode='rb')
+        data = self._read(mode='rb')
         encrypted = Crypt.encrypt(data, key)
-        encrypted_file.write(encrypted, mode='wb')
+        encrypted_file._write(encrypted, mode='wb')
         if delete_original:
             self.delete()
         return encrypted_file
@@ -272,9 +275,9 @@ class File(Path):
 
         logger.debug(f'Decrypt file: {self}')
         decrypted_file = File(self.replace('.' + self.ENCRYPTED_EXTENSION, ''))
-        data = self.read(mode='rb')
+        data = self._read(mode='rb')
         decrypted = Crypt.decrypt(data, key)
-        decrypted_file.write(decrypted, mode='wb')
+        decrypted_file._write(decrypted, mode='wb')
         if delete_original:
             self.delete()
         return decrypted_file

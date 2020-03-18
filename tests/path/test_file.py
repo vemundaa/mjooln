@@ -139,3 +139,85 @@ def test_move(tmp_folder, tmp_files):
     assert len(source_dir.list('*.txt')) == _num_test_files
     assert len(source_dir.list('*.txt.move')) == 0
 
+
+def test_encrypt(tmp_folder, tmp_files):
+    _num_test_files = len(tmp_files)
+    tmp_dir = tmp_folder
+    assert len(tmp_dir.list('*.txt')) == _num_test_files
+
+    tmp_file = tmp_files[0]
+    data_before = tmp_file.read()
+    extension = tmp_file.extension()
+    assert extension == 'txt'
+    assert not tmp_file.is_encrypted()
+    key = mj.Crypt.generate_key()
+    efile = tmp_file.encrypt(key=key)
+    assert efile.extension() == 'txt'
+    assert efile.is_encrypted()
+
+    dfile = efile.decrypt(key)
+    assert not dfile.is_compressed()
+    assert dfile.extension() == 'txt'
+    data_after = dfile.read()
+    assert data_before == data_after
+
+    tmp_file = tmp_files[1]
+    data_before = tmp_file.read()
+    extension = tmp_file.extension()
+    assert extension == 'txt'
+    assert not tmp_file.is_encrypted()
+    salt = mj.Crypt.salt()
+    key = mj.Crypt.key_from_password(salt, 'test')
+    efile = tmp_file.encrypt(key)
+    assert efile.extension() == 'txt'
+    assert efile.is_encrypted()
+
+    key = mj.Crypt.key_from_password(salt, 'test')
+    dfile = efile.decrypt(key)
+    assert not dfile.is_compressed()
+    assert dfile.extension() == 'txt'
+    data_after = dfile.read()
+    assert data_before == data_after
+
+
+def test_read_write_encrypted(tmp_folder):
+    text = 'This is a sample text, in normal string format.'
+    f = mj.File.join(tmp_folder, 'test.gz.aes')
+    password = 'some password'
+    key = mj.Crypt.generate_key()
+
+    with pytest.raises(mj.FileError):
+        f.write(text)
+    f.write(text, password=password)
+    assert len(tmp_folder.list()) == 1
+
+    with pytest.raises(mj.FileError):
+        f.read(key=key, password=password)
+    assert f.exists()
+    with pytest.raises(mj.FileError):
+        f.read()
+    assert f.exists()
+    with pytest.raises(mj.CryptError):
+        f.read(key=key)
+    assert f.exists()
+    read_text = f.read(password=password)
+    assert text == read_text
+    assert len(tmp_folder.list()) == 1
+
+    f.delete()
+    f.write(text, key=key)
+    assert len(tmp_folder.list()) == 1
+    with pytest.raises(mj.FileError):
+        f.read(key=key, password=password)
+    assert f.exists()
+    with pytest.raises(mj.FileError):
+        f.read()
+    assert f.exists()
+    with pytest.raises(mj.CryptError):
+        f.read(password=password)
+    assert f.exists()
+    assert len(tmp_folder.list()) == 1
+    read_text = f.read(key=key)
+    assert text == read_text
+    assert len(tmp_folder.list()) == 1
+

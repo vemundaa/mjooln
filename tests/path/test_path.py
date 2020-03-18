@@ -23,14 +23,14 @@ def _make(folder, subfolder, name, is_folder, exists):
                 os.makedirs(folder)
             with open(path, 'w') as f:
                 f.write('Some simple text')
-        paths.append(mj.Path)
+        paths.append(mj.Path(path))
     return paths
 
 
 @pytest.fixture()
 def paths(tmp_folder):
     paths = {}
-    paths['files'] = _make(tmp_folder, '','file_{}.txt', False, True)
+    paths['files'] = _make(tmp_folder, '', 'file_{}.txt', False, True)
     paths['not_files'] = _make(tmp_folder, '', 'not_file_{}.txt', False, False)
     paths['folders'] = _make(tmp_folder, '', 'folder_{}', True, True)
     paths['not_folders'] = _make(tmp_folder, '', 'not_folder_{}', True, False)
