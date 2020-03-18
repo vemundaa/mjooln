@@ -2,9 +2,10 @@ import json
 import simplejson
 
 from mjooln.core.zulu import Zulu
-from mjooln.segment.segment import Segment
+from mjooln.core.segment import Segment
 
 
+# TODO: Move string conversion to JSON, and add custom class handling, including reserved words
 class JSON:
     """Dict to/from JSON string, with optional human readable"""
 

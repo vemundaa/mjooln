@@ -9,10 +9,11 @@ from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 
 
 class Crypt:
-    """ Wrapper for Best Practice key generation (ref Cryptography/Fernet)
+    """ Wrapper for best practice key generation and AES 128 encryption
 
     From Fernet doc:
     HMAC using SHA256 for authentication, and PKCS7 padding.
+    Uses AES in CBC mode with a 128-bit key for encryption, and PKCS7 padding.
     """
 
     @classmethod
@@ -41,15 +42,6 @@ class Crypt:
             backend=default_backend()
         )
         return base64.urlsafe_b64encode(kdf.derive(password))
-
-
-class AES(Crypt):
-    """ Wrapper for Best Practice AES 128 encryption (ref Cryptography/Fernet).
-
-    From Fernet doc:
-    Uses AES in CBC mode with a 128-bit key for encryption, and PKCS7 padding.
-    HMAC using SHA256 for authentication.
-    """
 
     @classmethod
     def encrypt(cls, data, key):
