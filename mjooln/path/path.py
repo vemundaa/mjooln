@@ -22,7 +22,7 @@ class Path(str):
     }
 
     @classmethod
-    def home(cls):
+    def home(cls, *args, **kwargs):
         return cls(os.path.expanduser('~'))
 
     @classmethod

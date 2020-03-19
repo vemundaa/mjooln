@@ -33,6 +33,10 @@ class File(Path):
         return super().join(*args)
 
     @classmethod
+    def home(cls, file_name):
+        return cls.join(Folder.home(), file_name)
+
+    @classmethod
     def key_from_key_or_password(cls, key=None, password=None):
         """Using a password will make a key combined with the internal class salt"""
         if key and password:
@@ -114,8 +118,6 @@ class File(Path):
 
     def write(self, data, mode='w', key=None, password=None, human_readable=True, **kwargs):
         # TODO: Require compression if file is encrypted?
-        if self.exists():
-            raise FileError(f'Cannot write to existing file (use append): {self}')
         if self._encrypted:
             key = self.key_from_key_or_password(key, password)
         if self._json:
@@ -125,9 +127,10 @@ class File(Path):
         if self._compressed:
             self._write_compressed(data)
             if self._encrypted:
-                logger.warning('On the fly encrypt/compress not implemented. '
-                               'There is an extra read/write from/to disk. '
-                               'In other words, this is a hack.')
+                if self.size() > 100000:
+                    logger.warning('On the fly encrypt/compress not implemented. '
+                                   'There is an extra read/write from/to disk. '
+                                   'In other words, this is a hack.')
                 # TODO: Refactor to write once, but verify zlib/gzip compatibility
                 data = self._read(mode='rb')
                 data = Crypt.encrypt(data, key)
