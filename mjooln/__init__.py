@@ -4,7 +4,7 @@ from mjooln.core.key import Key, KeyFormatError
 from mjooln.core.segment import Segment, SegmentError
 from mjooln.core.dic_doc import Dic, Doc, JSON
 
-from mjooln.crypt.crypt import Crypt, CryptError
+from mjooln.core.crypt import Crypt, CryptError
 from mjooln.path.path import Path, PathError
 from mjooln.path.file import File, FileError
 from mjooln.path.folder import Folder, FolderError

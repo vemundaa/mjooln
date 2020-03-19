@@ -5,7 +5,7 @@ from mjooln.core.zulu import Zulu
 from mjooln.core.segment import Segment
 
 
-# TODO: Move string conversion to JSON, and add custom class handling, including reserved words
+# TODO: Add custom class handling, including reserved words
 class JSON:
     """Dict to/from JSON string, with optional human readable"""
 
@@ -124,6 +124,17 @@ class DocError(Exception):
 
 class Doc(Dic):
     """Enables child classes to mirror attributes and JSON strings"""
+
+    @classmethod
+    def dic_to_doc(cls, dic, human_readable=True):
+        dic = cls._to_strings(dic)
+        return JSON.dumps(dic, human=human_readable)
+
+    @classmethod
+    def doc_to_dic(cls, doc):
+        dic = JSON.loads(doc)
+        dic = cls._from_strings(dic)
+        return dic
 
     def _add_doc(self, doc):
         dic = JSON.loads(doc)

@@ -4,7 +4,8 @@ import os
 import shutil
 import hashlib
 
-from mjooln.crypt.crypt import Crypt
+from mjooln.core.crypt import Crypt
+from mjooln.core.dic_doc import Doc
 from mjooln.path.path import Path
 from mjooln.path.folder import Folder
 
@@ -17,11 +18,14 @@ class File(Path):
     ENCRYPTED_EXTENSION = 'aes'
     RESERVED_EXTENSIONS = [COMPRESSED_EXTENSION, ENCRYPTED_EXTENSION]
 
+    JSON_EXTENSION = 'json'
+
     _salt = b'O89ogfFYLGUts3BM1dat4vcQ'
 
     _hidden = None
     _compressed = None
     _encrypted = None
+    _json = None
 
     @classmethod
     def join(cls, *args):
@@ -30,6 +34,7 @@ class File(Path):
 
     @classmethod
     def key_from_key_or_password(cls, key=None, password=None):
+        """Using a password will make a key combined with the internal class salt"""
         if key and password:
             raise FileError('Use either key or password.')
         elif not key and not password:
@@ -50,6 +55,7 @@ class File(Path):
         instance._hidden = instance.name().startswith('.')
         instance._compressed = cls.COMPRESSED_EXTENSION in instance.extensions()
         instance._encrypted = cls.ENCRYPTED_EXTENSION in instance.extensions()
+        instance._json = cls.JSON_EXTENSION in instance.extensions()
         return instance
 
     def parts(self):
@@ -106,12 +112,15 @@ class File(Path):
     def name(self):
         return os.path.basename(self)
 
-    def write(self, data, mode='w', key=None, password=None, **kwargs):
+    def write(self, data, mode='w', key=None, password=None, human_readable=True, **kwargs):
         # TODO: Require compression if file is encrypted?
         if self.exists():
             raise FileError(f'Cannot write to existing file (use append): {self}')
         if self._encrypted:
             key = self.key_from_key_or_password(key, password)
+        if self._json:
+            data = Doc.dic_to_doc(data, human_readable=human_readable)
+
         self.folder().touch()
         if self._compressed:
             self._write_compressed(data)
@@ -143,9 +152,6 @@ class File(Path):
         with gzip.open(self, mode='wb') as f:
             f.write(content)
 
-    def tmp(self):
-        return self.join(self.folder(), '.tmp__' + self.name())
-
     def read(self, mode='r', key=None, password=None, *args, **kwargs):
         if not self.exists():
             raise FileError(f'Cannot read from file that does not exist: {self}')
@@ -158,7 +164,7 @@ class File(Path):
                                'In other words, this is a hack.')
                 # TODO: Refactor to read once, but verify zlib/gzip compatibility
                 decrypted_file = self.decrypt(key, delete_original=False)
-                data = decrypted_file.read(mode=mode)
+                data = decrypted_file._read_compressed(mode=mode)
                 decrypted_file.delete()
             else:
                 data = self._read_compressed(mode=mode)
@@ -170,6 +176,9 @@ class File(Path):
                     data = data.decode()
             else:
                 data = self._read(mode=mode)
+
+        if self._json:
+            data = Doc.doc_to_dic(data)
         return data
 
     def _read(self, mode='r'):

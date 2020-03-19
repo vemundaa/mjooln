@@ -54,7 +54,6 @@ class Crypt:
 
     @classmethod
     def decrypt(cls, data, key):
-        # TODO: Catch InvalidToken error
         if not type(data) == bytes:
             raise CryptError('Cannot decrypt data. Data is not bytes')
         if not type(key) == bytes:

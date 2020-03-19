@@ -29,3 +29,13 @@ def tmp_files(tmp_folder):
     yield files
     for file in files:
         file.delete(missing_ok=True)
+
+
+@pytest.fixture()
+def dic():
+    return {
+        'zulu': mj.Zulu(),
+        'text': 'Some very good text',
+        'number': 34,
+        'float': 3333.3333,
+    }

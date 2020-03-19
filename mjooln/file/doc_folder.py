@@ -38,11 +38,10 @@ class DocFolder(Doc):
         return self._file
 
     def write(self):
-        doc = self.doc()
-        self._file.write_text(self.doc())
+        self._file.write(self.doc())
 
     def read(self):
-        doc = self._file.read_text()
+        doc = self._file.read()
         self.add(doc)
 
     def empty(self):

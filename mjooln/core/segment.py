@@ -1,6 +1,8 @@
 import logging
 
-from mjooln import Zulu, Key, Identity
+from mjooln.core.zulu import Zulu
+from mjooln.core.key import Key
+from mjooln.core.identity import Identity
 
 logger = logging.getLogger(__name__)
 
@@ -8,7 +10,6 @@ logger = logging.getLogger(__name__)
 class Segment:
 
     SEPARATOR = '___'
-    FORMAT = SEPARATOR.join(['{}', '{}', '{}'])
 
     @classmethod
     def check(cls, dic):
@@ -51,7 +52,7 @@ class Segment:
         self.identity = identity
 
     def __str__(self):
-        return self.FORMAT.format(self.zulu, self.key, self.identity)
+        return self.SEPARATOR.join([str(self.zulu), self.key, self.identity])
 
     def parts(self):
         return str(self).split(self.SEPARATOR)

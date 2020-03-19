@@ -221,3 +221,22 @@ def test_read_write_encrypted(tmp_folder):
     assert text == read_text
     assert len(tmp_folder.list()) == 1
 
+
+def test_json_file(tmp_folder, dic):
+    f = mj.File.join(tmp_folder, 'some_text.json')
+    dic1 = dic.copy()
+    f.write(dic1)
+    dic2 = f.read()
+    assert dic == dic2
+
+    f = mj.File.join(tmp_folder, 'some_text.json.gz')
+    dic1 = dic.copy()
+    f.write(dic1)
+    dic2 = f.read()
+    assert dic == dic2
+
+    f = mj.File.join(tmp_folder, 'some_text.json.gz.aes')
+    dic1 = dic.copy()
+    f.write(dic1, password='test')
+    dic2 = f.read(password='test')
+    assert dic == dic2
