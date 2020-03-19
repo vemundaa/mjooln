@@ -26,6 +26,8 @@ class File(Path):
     _compressed = None
     _encrypted = None
     _json = None
+    # TODO: Add binary flag based on extension (all other than text is binary..)
+    # TODO: Facilitate child classes with custom read/write needs
 
     @classmethod
     def join(cls, *args):

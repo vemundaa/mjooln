@@ -1,6 +1,8 @@
 import logging
 
-from mjooln import Doc, File, Folder
+from mjooln.core.dic_doc import Doc
+from mjooln.path.folder import Folder
+from mjooln.file.doc_file import DocFile
 
 logger = logging.getLogger(__name__)
 
@@ -19,17 +21,25 @@ class DocFolder(Doc):
     def home(cls):
         return cls(Folder.home())
 
-    def __init__(self, folder_path):
+    def __init__(self,
+                 folder_path,
+                 compressed=False,
+                 encrypted=False,
+                 key=None,
+                 password=None,
+                 **kwargs):
         self._folder = Folder(folder_path)
         self._folder.touch()
-        self._file = File.join(self._folder, self._file_name())
-        if self._file.exists():
-            self.read()
-        else:
-            self.write()
+        _file = File(self._file_path(compressed=compressed, encrypted=encrypted))
+        DocFile.__init__(_file, key=key, password=password)
 
-    def _file_name(self):
-        return f'.{self._folder.name()}.json'
+    def _file_path(self, compressed, encrypted):
+        file_name = f'.{self._folder.name()}.json'
+        if compressed:
+            file_name += '.gz'
+        if encrypted:
+            file_name += '.aes'
+        return File.join(self, file_name)
 
     def folder(self):
         return self._folder
@@ -38,11 +48,11 @@ class DocFolder(Doc):
         return self._file
 
     def write(self):
-        self._file.write(self.doc())
+        self._file.write(self.dic())
 
     def read(self):
-        doc = self._file.read()
-        self.add(doc)
+        dic = self._file.read()
+        self.add(dic)
 
     def empty(self):
         self._folder.empty()

@@ -18,8 +18,6 @@ class DocFile(Doc):
             raise DocFileError(f'Document file must be of type \'json\'. IE end with \'.json\', '
                                f'\'.json.gz.\' or \'json.gz.aes\'. '
                                f'The input path doesnt: {file_path}')
-        # if self._file.is_encrypted() or self._file.is_compressed():
-        #     raise DocFileError(f'Compression and encryption not implemented for DocFile.')
         if self._file.exists():
             self.read()
         else:

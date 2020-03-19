@@ -84,6 +84,9 @@ class Folder(Path):
         else:
             raise FolderError(f'Cannot remove a non existent folder: {self}')
 
+    def name(self):
+        return os.path.basename(self)
+
 
 class FolderError(Exception):
     pass

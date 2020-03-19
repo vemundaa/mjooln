@@ -1,5 +1,22 @@
 import pytest
 import mjooln as mj
+import random
+import string
+
+@pytest.fixture()
+def random_string(num_chars=1000):
+    yield ''.join(random.choices(string.ascii_uppercase + string.digits + '\n',
+                                 k=num_chars))
+
+
+@pytest.fixture()
+def dic():
+    return {
+        'zulu': mj.Zulu(),
+        'text': 'Some very good text',
+        'number': 34,
+        'float': 3333.3333,
+    }
 
 
 def dev_create_test_files(files, num_chars=1000):
@@ -30,12 +47,3 @@ def tmp_files(tmp_folder):
     for file in files:
         file.delete(missing_ok=True)
 
-
-@pytest.fixture()
-def dic():
-    return {
-        'zulu': mj.Zulu(),
-        'text': 'Some very good text',
-        'number': 34,
-        'float': 3333.3333,
-    }
