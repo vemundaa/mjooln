@@ -24,11 +24,12 @@ class Tree(Root):
               species=SPECIES,
               compress_all=False,
               encrypt_all=False,
+              encryption_key=None,
               key_levels=0,
               date_levels=0,
               time_levels=0,
               **kwargs):
-        return super(Tree, cls).plant(ground, key,
+        tree = super(Tree, cls).plant(ground, key,
                                       species=species,
                                       compress_all=compress_all,
                                       encrypt_all=encrypt_all,
@@ -36,6 +37,10 @@ class Tree(Root):
                                       date_levels=date_levels,
                                       time_levels=time_levels,
                                       **kwargs)
+        if encryption_key:
+            return cls(ground.append(key), encryption_key=encryption_key)
+        else:
+            return tree
 
     def __init__(self, folder, default=False, encryption_key=None):
         self.compress_all = False
@@ -102,7 +107,7 @@ class Tree(Root):
             leaf = leaf.decompress()
         if not leaf.is_encrypted() and self.encrypt_all:
             leaf = leaf.encrypt(self._encryption_key)
-        elif leaf.is_encrypted and not self.encrypt_all:
+        elif leaf.is_encrypted() and not self.encrypt_all:
             leaf = leaf.decrypt(self._encryption_key)
 
         return Leaf.elf(leaf)

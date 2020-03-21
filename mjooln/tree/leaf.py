@@ -12,5 +12,5 @@ class Leaf(File, Segment):
     def __init__(self, file):
         # TODO: Segment as method instead of inheritance?
         File.__init__(self)
-        Segment.__init__(self, file.stub())
+        Segment.__init__(self, self.stub())
 

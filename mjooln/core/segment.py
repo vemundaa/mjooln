@@ -54,11 +54,8 @@ class Segment:
     def __str__(self):
         return self.SEPARATOR.join([str(self.zulu), self.key, self.identity])
 
-    def parts(self):
-        return str(self).split(self.SEPARATOR)
-
     def custom_separator(self, separator):
-        return separator.join(self.parts())
+        return separator.join(str(self).split(self.SEPARATOR))
 
     def levels(self,
                key_levels=1,
