@@ -14,17 +14,21 @@ logger = logging.getLogger(__name__)
 
 class File(Path):
 
+    JSON_EXTENSION = 'json'
     COMPRESSED_EXTENSION = 'gz'
     ENCRYPTED_EXTENSION = 'aes'
+
     RESERVED_EXTENSIONS = [COMPRESSED_EXTENSION, ENCRYPTED_EXTENSION]
 
-    JSON_EXTENSION = 'json'
+    HIDDEN_STARTSWITH = '.'
+    EXTENSION_SEPARATOR = '.'
 
     _salt = b'O89ogfFYLGUts3BM1dat4vcQ'
 
     _hidden = None
     _compressed = None
     _encrypted = None
+    # TODO: Reconsider if json handling should be in file.
     _json = None
     # TODO: Add binary flag based on extension (all other than text is binary..)
     # TODO: Facilitate child classes with custom read/write needs
@@ -58,14 +62,14 @@ class File(Path):
                 raise FileError(f'Path is volume, not file: {path_str}')
             elif instance.is_folder():
                 raise FileError(f'Path is existing folder, not file: {path_str}')
-        instance._hidden = instance.name().startswith('.')
+        instance._hidden = instance.name().startswith(cls.HIDDEN_STARTSWITH)
         instance._compressed = cls.COMPRESSED_EXTENSION in instance.extensions()
         instance._encrypted = cls.ENCRYPTED_EXTENSION in instance.extensions()
         instance._json = cls.JSON_EXTENSION in instance.extensions()
         return instance
 
     def parts(self):
-        parts = self.name().split('.')
+        parts = self.name().split(self.EXTENSION_SEPARATOR)
         if self.is_hidden():
             parts = parts[1:]
         return parts

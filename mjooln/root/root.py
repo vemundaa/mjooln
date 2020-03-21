@@ -1,6 +1,6 @@
 import logging
 
-from mjooln import Doc, File, Folder
+from mjooln import Dic, Doc, File, Folder
 
 logger = logging.getLogger(__name__)
 
@@ -9,12 +9,12 @@ class RootError(Exception):
     pass
 
 
-class NotARootException(RootError):
+class NotRootException(RootError):
     pass
 
 
 # TODO: Rewrite root as file?
-class Root(Folder, Doc):
+class Root(Doc):
     """ Combination of a folder and a file that defines a particular spot in the file system.
 
     A root with name "julian", has a folder with the path ../julian, and in this
@@ -23,42 +23,61 @@ class Root(Folder, Doc):
 
     Thus there is a triplet defining a particular folder as a valid root.
 
-    There are three other default attributes:
-     -
     """
+    # TODO: Add segment and species description. Also needs to be planted
+    # TODO: Change key to name?
 
-    ROOT = 'root'
-    SPECIES = ROOT
-
-    @classmethod
-    def _file_name(cls, folder):
-        return '.' + folder.name() + '.json'
+    # Override in child class
+    SPECIES = 'root'
 
     @classmethod
-    def _file(cls, folder):
-        return File.join(folder, cls._file_name(folder))
-
-    @classmethod
-    def home(cls):
-        return cls(Folder.home())
-
-    @classmethod
-    def plant(cls, folder, **kwargs):
+    def plant(cls, ground, key, species=SPECIES, **kwargs):
+        folder = ground.append(key)
         if folder.exists():
             raise RootError(f'Cannot plant root in existing folder: {folder}. '
                             f'Empty and remove folder first. Or use a different folder.')
-        cls.plant_with_force(folder, **kwargs)
+        root = cls(folder, default=True)
+        folder.create()
+        root._key = key
+        root._species = species
+        root.add(kwargs)
+        root.write()
+        return root
+
 
     @classmethod
-    def plant_with_force(cls, folder, **kwargs):
-        folder.touch()
-        file = cls._file(folder)
-        doc = Doc()
-        doc.key = folder.name()
-        if kwargs:
-            doc._add_dic(kwargs)
-        file.write(doc.doc())
-        return cls(folder)
+    def _file_name(cls, folder, compressed=False, encrypted=False):
+        file_name = File.HIDDEN_STARTSWITH + \
+                    folder.name() + \
+                    File.EXTENSION_SEPARATOR + \
+                    File.JSON_EXTENSION
+        if compressed:
+            file_name += File.EXTENSION_SEPARATOR + File.COMPRESSED_EXTENSION
+        if encrypted:
+            file_name += File.EXTENSION_SEPARATOR + File.ENCRYPTED_EXTENSION
+        return file_name
+
+    @classmethod
+    def plant_with_force(cls, folder, species=SPECIES,
+                         compressed=False, encrypted=False, **kwargs):
+        """Plants a root, ignoring existing folder and other usual requirements"""
+        if compressed or encrypted:
+            raise RootError('Compression and encryption are not implemented.')
+
+        root = cls(folder, default=True)
+        root._species = species
+        root.add(kwargs)
+
+        if root._file.exists():
+            root._file.delete()
+        if root._folder.exists():
+            if not folder.is_empty():
+                raise RootError('Folder is not empty. Cannot plant anything here, '
+                                'as there are limits to the force applied. '
+                                'Use uproot, and with_force=True, then plant.')
+
+        root.write()
+        return root
 
     @classmethod
     def is_root(cls, folder):
@@ -69,9 +88,14 @@ class Root(Folder, Doc):
             return False
 
     @classmethod
-    def elf(cls, folder, dic=None):
+    def elf(cls, folder, species=SPECIES, compressed=False, encrypted=False, dic=None):
+        if compressed or encrypted:
+            raise RootError('Compression and encryption are not implemented.')
+
         if folder.exists():
-            if cls._file(folder).exists():
+            if File.join(folder,
+                         cls._file_name(compressed=compressed,
+                                        encrypted=encrypted)).exists():
                 try:
                     return cls(folder)
                 except RootError:
@@ -83,53 +107,50 @@ class Root(Folder, Doc):
         else:
             return cls.plant(folder, dic=dic)
 
-    def __init__(self, folder):
-        folder = Folder.elf(folder)
-        if not folder.exists():
-            raise NotARootException(f'Folder does not exists: {folder}')
-        if not self._file(folder).exists():
-            raise NotARootException(f'Description file does not exist: {self._file(folder)}')
-        Folder.__init__(self)
-        self.key = ''
-        self.species = ''
-        self.read()
-        if self.key != folder.name():
-            raise NotARootException(f'Key/folder mismatch. '
-                                    f'key={self.key}, '
-                                    f'folder={folder.name()}, '
-                                    f'path={self}')
+    def __init__(self, folder_path, compressed=False, encrypted=False, default=False):
+        if compressed or encrypted:
+            raise RootError('Compression and encryption are not implemented.')
+        self._folder = Folder(folder_path)
+        if not default and not self._folder.exists():
+            raise NotRootException(f'Folder does not exists: {self._folder}')
+        self._file = File.join(self._folder,
+                               self._file_name(self._folder,
+                                               compressed=compressed,
+                                               encrypted=encrypted))
+        if not default and not self._file.exists():
+            raise NotRootException(f'Description file does not exist: {self._file}')
+        if default:
+            self._key = folder_path.name()
+            self._species = self.SPECIES
+        if not default:
+            self.read()
+            if self._key != self._folder.name():
+                raise NotRootException(f'Key/folder mismatch. '
+                                       f'key={self._key}, '
+                                       f'folder={self._folder}, '
+                                       f'file={self._file}')
 
     def write(self):
-        file = self._file(self)
-        file.write(self.doc(), mode='w')
+        dic = self.dic()
+        dic['_key'] = self._key
+        dic['_species'] = self._species
+        self._file.write(dic)
 
     def read(self):
-        file = self._file(self)
-        self._add_doc(file.read(mode='r'))
+        self._add_dic(self._file.read(), ignore_private=False)
 
-    def remove(self):
-        file = self._file(self)
-        file.delete()
-        super().remove()
-
-    def uproot(self, force=False, key=None):
-        if not force and len(self.list()) > 1:
-            raise RootError(f'Root is not empty: {self}. '
-                            f'Use force=True')
-        if force:
-            if key == self.key:
-                self.empty()
+    def uproot(self, with_force=False, key=None):
+        if len(self._folder.list()) > 1:
+            if with_force:
+                if key == self._key:
+                    self._folder.empty()
+                else:
+                    raise RootError(f'Root folder ({self}) is not empty. '
+                                    f'Enter root key as input to '
+                                    f'uproot with force: key={self._key}')
             else:
-                raise RootError(f'Enter root key as input to '
-                                f'force empty folder: {self.key}')
-        self.remove()
-
-
-if __name__ == '__main__':
-    root_folder = Folder('/Users/vemundaa/dev/data/tenoone/test_tree4')
-    print(root_folder)
-    root = Root.plant(root_folder, hey='there')
-    root.dev_print()
-    root = Root(root_folder)
-    root.dev_print()
-    root.uproot()
+                raise RootError(f'Root folder ({self}) is not empty. '
+                                f'Uproot with force to empty it: with_force=True')
+        if self._file.exists():
+            self._file.delete()
+        self._folder.remove()

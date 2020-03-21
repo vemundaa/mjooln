@@ -35,61 +35,64 @@ class Dic:
 
     Certain classes are converted to/from strings when using JSON conversion"""
 
-    IGNORE_STARTSWITH = '_'
+    PRIVATE_STARTSWITH = '_'
 
     @classmethod
     def default(cls):
         return cls().dic()
 
-    def _add_item(self, key, item):
-        if not key.startswith(self.IGNORE_STARTSWITH):
+    def _add_item(self, key, item, ignore_private=True):
+        # Add item and ignore private items if ignore_private is set to True
+        if not ignore_private or not key.startswith(self.PRIVATE_STARTSWITH):
             self.__setattr__(key, item)
 
-    def _add_dic(self, dic):
+    def _add_dic(self, dic, ignore_private=True):
         for key, item in dic.items():
-            self._add_item(key, item)
+            self._add_item(key, item, ignore_private=ignore_private)
 
-    def add(self, dic):
-        self._add_dic(dic)
+    def add(self, dic, ignore_private=True):
+        self._add_dic(dic, ignore_private=ignore_private)
 
-    def dic(self):
+    def dic(self, ignore_private=True):
         dic = vars(self).copy()
-        pop_keys = [x for x in dic if x.startswith(self.IGNORE_STARTSWITH)]
-        for key in pop_keys:
-            dic.pop(key)
+        if ignore_private:
+            pop_keys = [x for x in dic if x.startswith(self.PRIVATE_STARTSWITH)]
+            for key in pop_keys:
+                dic.pop(key)
         return dic
 
-    def add_only_existing(self, dic):
+    def add_only_existing(self, dic, ignore_private=True):
         dic_to_add = {}
         for key in dic:
             if hasattr(self, key):
                 dic_to_add[key] = dic[key]
-        self._add_dic(dic_to_add)
+        self._add_dic(dic_to_add, ignore_private=ignore_private)
+        #
+        # for key, item in dic.items():
+        #     if not key.startswith(self.PRIVATE_STARTSWITH):
+        #         if hasattr(self, key):
+        #             self.__setattr__(key, item)
 
-        for key, item in dic.items():
-            if not key.startswith(self.IGNORE_STARTSWITH):
-                if hasattr(self, key):
-                    self.__setattr__(key, item)
-
-    def force_equal(self, dic):
-        self._add_dic(dic)
-        for key in self.dic():
+    def force_equal(self, dic, ignore_private=True):
+        self._add_dic(dic, ignore_private=ignore_private)
+        for key in self.dic(ignore_private=ignore_private):
             if key not in dic:
                 self.__delattr__(key)
 
-    def dev_print(self):
-        text = '--' + f'  [[ {type(self).__name__} ]]  '
-        text += (80-len(text)) * '-'
+    def dev_print(self, ignore_private=True, indent=4*' ', width=80):
+        """Pretty print of class variables for development in terminal"""
+        text = f'--{indent}[[ {type(self).__name__} ]]{indent}'
+        text += (width-len(text)) * '-'
         print(text)
-        self._dev_print(self.dic(), level=0)
-        print(80*'-')
+        self._dev_print(self.dic(ignore_private=ignore_private), level=0)
+        print(width*'-')
 
-    def _dev_print(self, dic, level=0):
+    def _dev_print(self, dic, level=0, indent=4*' '):
         for key, item in dic.items():
             if isinstance(item, dict):
                 self._dev_print(item, level=level+1)
             else:
-                print(level*'  ' + f'{key}: [{type(item).__name__}] {item} ')
+                print(level*indent + f'{key}: [{type(item).__name__}] {item} ')
 
     @classmethod
     def _from_strings(cls, dic):
@@ -136,64 +139,22 @@ class Doc(Dic):
         dic = cls._from_strings(dic)
         return dic
 
-    def _add_doc(self, doc):
+    def _add_doc(self, doc, ignore_private=True):
         dic = JSON.loads(doc)
         dic = self._from_strings(dic)
-        self._add_dic(dic)
+        self._add_dic(dic, ignore_private=ignore_private)
 
-    def add(self, dic_or_doc):
+    def add(self, dic_or_doc, ignore_private=True):
         if not dic_or_doc:
             return
         if isinstance(dic_or_doc, dict):
-            Dic._add_dic(self, dic_or_doc)
+            Dic._add_dic(self, dic_or_doc, ignore_private=ignore_private)
         elif isinstance(dic_or_doc, str):
-            self._add_doc(dic_or_doc)
+            self._add_doc(dic_or_doc, ignore_private=ignore_private)
         else:
             raise DocError(f'Input object is neither dic nor doc: {type(dic_or_doc)}')
 
-    def doc(self):
-        dic = self.dic()
+    def doc(self, ignore_private=True):
+        dic = self.dic(ignore_private=ignore_private)
         dic = self._to_strings(dic)
         return JSON.dumps(dic)
-
-
-class SampleDic(Dic):
-
-    def __init__(self):
-        self._hide = 'test'
-        self.date = Zulu()
-        self.text = 'Hello there'
-        self.number = float(0.3)
-        self.d = {
-            'date': Zulu(),
-            'cont': 'yo',
-        }
-
-
-class SampleDoc(Doc):
-
-    def __init__(self):
-        self.date = Zulu()
-        self.text = 'Hello there'
-        self.number = float(0.3)
-        self.d = {
-            'date': Zulu(),
-            'cont': 'yo',
-            'sub': {
-                'hello': 'fefe',
-                'there': 5,
-            }
-        }
-
-
-if __name__ == '__main__':
-    dic = SampleDic()
-    dic.dev_print()
-    print(80*'#')
-    doc = SampleDoc()
-    doc.dev_print()
-    print(80*'#')
-    dd = Doc()
-    dd.add(doc.doc())
-    dd.dev_print()
-

@@ -27,6 +27,7 @@ class Folder(Path):
         return instance
 
     def create(self, error_if_exists=True):
+        """Create new folder, including non existent parent folders"""
         if not self.exists():
             os.makedirs(self)
             return True
@@ -36,7 +37,12 @@ class Folder(Path):
             return False
 
     def touch(self):
+        """Create folder if it does not exist, ignore otherwise"""
         self.create(error_if_exists=False)
+
+    def untouch(self):
+        """Remove folder if it exists, ignore otherwise"""
+        self.remove(error_if_not_exists=False)
 
     def parent(self):
         return Folder(os.path.dirname(self))
@@ -78,11 +84,12 @@ class Folder(Path):
         else:
             raise FolderError(f'Cannot empty a non existent folder: {self}')
 
-    def remove(self):
+    def remove(self, error_if_not_exists=True):
         if self.exists():
             os.rmdir(self)
         else:
-            raise FolderError(f'Cannot remove a non existent folder: {self}')
+            if error_if_not_exists:
+                raise FolderError(f'Cannot remove a non existent folder: {self}')
 
     def name(self):
         return os.path.basename(self)

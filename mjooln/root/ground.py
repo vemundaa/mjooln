@@ -1,71 +1,81 @@
-from mjooln import Key, Root, Folder, RootError
+from mjooln import Root, Dic, Folder, File, RootError, Zulu
 
-# TODO: Make linked fields. Either a copy or addition.
-# TODO: Field should inherit RootFolder, and handle the different types of root.
 # TODO: A field can have split trees (identical, indexed, and with randomized where each leaf is)
 
-# TODO: Ground and Root reversed dependency?
 
-
-class GroundError(Exception):
+class GroundProblem(Exception):
     pass
 
 
-class Ground(Root):
-
-    GROUND = 'ground'
-    SPECIES = GROUND
-
-    @classmethod
-    def plant(cls, folder, **kwargs):
-        raise GroundError('Cannot plant ground. Use \'settle\'. '
-                          'When settled, you can plant roots in a field '
-                          'using \'plant_root\', with key (root name) '
-                          'as input.')
+class Ground(Folder):
+    """Folder wrapper with the ability to list roots within"""
+    FILE_NAME = f'{File.HIDDEN_STARTSWITH}ground{File.EXTENSION_SEPARATOR}{File.JSON_EXTENSION}'
 
     @classmethod
-    def settle(cls, folder, name='', **kwargs):
-        if cls._file(folder).exists():
+    def search_for(cls):
+        files = File.list(pattern=cls.FILE_NAME, recursive=True)
+        return [cls(x.folder()) for x in files]
+
+    @classmethod
+    def _file(cls, folder):
+        return File.join(folder, cls.FILE_NAME)
+
+    @classmethod
+    def is_ground(cls, folder):
+        if not folder.exists() or not cls._file(folder).exists():
+            return False
+        else:
+            return True
+
+    @classmethod
+    def settle(cls, folder, given_name='nn', **kwargs):
+        if not folder.exists():
+            raise GroundProblem(f'Cannot settle if the folder does not exist: {folder}')
+        file = cls._file(folder)
+        if file.exists():
+            dic = file.read()
+            if 'given_name' in dic:
+                name_ = dic['given_name']
+            else:
+                name_ = 'nn'
+            raise GroundProblem(f'This folder is already occupied by \'{name_}\'.')
+        else:
+            dic = {
+                'given_name': given_name
+            }
+            if kwargs:
+                dic.update(kwargs)
+            file.write(dic)
             return cls(folder)
-        return super().plant_with_force(folder, species='ground', given_name=name, **kwargs)
 
     @classmethod
-    def settle_at_home(cls):
+    def settle_at_home(cls, name='unknown'):
         folder = Folder.home()
-        return cls.settle(folder, name=f'Home Sweet Home')
+        return cls.settle(folder, name=name)
 
     def __str__(self):
-        return self.name()
-
-    def name(self):
-        if self.given_name:
-            return self.given_name
-        else:
-            return super().name()
+        return f'ground@{self.name()}'
 
     def __init__(self, folder):
-        self.given_name = ''
-        Root.__init__(self, folder)
-        if not self.species == 'ground':
-            raise GroundError(f'Root is not ground; species mismatch. '
-                             f'Should be \'{self.SPECIES}\', but is \'{self.species}\'. '
-                             f'This probably means you\'ve tried to settle '
-                             f'ground in an existing root, which is just '
-                              f'absurd.')
+        super().__init__()
+        if not self.is_ground(folder):
+            raise GroundProblem(f'Folder is not settled ground: {folder}')
+
+    def bury(self, dic):
+        # TODO: Refactor. At the moment it is something resembling a log.
+        file = self._file(self)
+        buried_dic = file.read()
+        buried_dic[str(Zulu())] = dic
+        file.write(buried_dic)
+
+    def retrieve(self):
+        file = self._file(self)
+        return file.read()
 
     def unsettle(self):
         self._file(self).delete()
 
-    def uproot(self, force=False, key=None):
-        raise GroundError('Cannot uproot ground. Use \'unsettle\'.')
-
-    def plant_root(self, key, **kwargs):
-        key = Key(key)
-        folder = self.append(key)
-        return Root.plant(folder, **kwargs)
-
     def root(self, key):
-        key = Key(key)
         return Root(self.append(key))
 
     def roots(self):
@@ -79,14 +89,3 @@ class Ground(Root):
             except RootError:
                 pass
         return roots
-
-
-if __name__ == '__main__':
-    field = Ground.home()
-    field.dev_print()
-    # r1 = field.plant_root('test1')
-    # r2 = field.plant_root('test2')
-    for r in field.roots():
-        r.dev_print()
-
-    r1 = field.root('test1')
