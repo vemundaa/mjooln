@@ -14,3 +14,6 @@ from mjooln.file.doc_folder import DocFolder, DocFolderError
 
 from mjooln.root.root import Root, RootError, NotRootException
 from mjooln.root.ground import Ground, GroundProblem
+
+from mjooln.tree.leaf import Leaf, LeafError
+from mjooln.tree.tree import Tree, TreeError

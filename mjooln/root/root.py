@@ -19,9 +19,10 @@ class Root(Doc):
 
     A root with name "julian", has a folder with the path ../julian, and in this
     folder is a file with the name .julian.json, containing root attributes.
-    One of the attributes must be "key", and this attribute must equal "julian".
+    One of the attributes must be "key", and this attribute must equal "julian". Thus there
+    is a triplet defining a particular folder as a valid root.
 
-    Thus there is a triplet defining a particular folder as a valid root.
+    A root class also stores all attributes (except private) in file.
 
     """
     # TODO: Add segment and species description. Also needs to be planted
@@ -86,26 +87,6 @@ class Root(Doc):
             return True
         except RootError:
             return False
-
-    @classmethod
-    def elf(cls, folder, species=SPECIES, compressed=False, encrypted=False, dic=None):
-        if compressed or encrypted:
-            raise RootError('Compression and encryption are not implemented.')
-
-        if folder.exists():
-            if File.join(folder,
-                         cls._file_name(compressed=compressed,
-                                        encrypted=encrypted)).exists():
-                try:
-                    return cls(folder)
-                except RootError:
-                    return None
-            else:
-                folder.remove()
-                return cls.plant(folder, dic=dic)
-
-        else:
-            return cls.plant(folder, dic=dic)
 
     def __init__(self, folder_path, compressed=False, encrypted=False, default=False):
         if compressed or encrypted:
