@@ -214,20 +214,26 @@ class File(Path):
         files = self.folder().files(pattern='*', recursive=False)
         return [File(x) for x in files]
 
-    def move(self, new_folder):
+    def move(self, new_folder, new_name=None):
         new_folder.touch()
-        new_file = File.join(new_folder, self.name())
+        if new_name:
+            new_file = File.join(new_folder, new_name)
+        else:
+            new_file = File.join(new_folder, self.name())
         if self.volume() == new_folder.volume():
             os.rename(self, new_file)
         else:
             shutil.move(self, new_file)
         return new_file
 
-    def copy(self, new_folder):
+    def copy(self, new_folder, new_name):
         if self.folder() == new_folder:
             raise FileError(f'Cannot copy a file to the same folder: {new_folder}')
         new_folder.touch()
-        new_file = File.join(new_folder, self.name())
+        if new_name:
+            new_file = File.join(new_folder, new_name)
+        else:
+            new_file = File.join(new_folder, self.name())
         shutil.copyfile(self, new_file)
         return new_file
 
@@ -289,7 +295,7 @@ class File(Path):
 
     def decrypt(self, key, delete_original=True):
         if not self._encrypted:
-            raise FileError(f'File is already encrypted: {self}')
+            raise FileError(f'File is not encrypted: {self}')
 
         logger.debug(f'Decrypt file: {self}')
         decrypted_file = File(self.replace('.' + self.ENCRYPTED_EXTENSION, ''))
