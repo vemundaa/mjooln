@@ -11,6 +11,7 @@ logger = logging.getLogger(__name__)
 
 class Path(str):
 
+    FOLDER_SEPARATOR = '/'
     LINUX = 'linux'
     WINDOWS = 'windows'
     OSX = 'osx'
@@ -35,7 +36,8 @@ class Path(str):
 
     @classmethod
     def mountpoints(cls):
-        return [x.mountpoint.replace('\\', '/') for x in psutil.disk_partitions(all=True)]
+        return [x.mountpoint.replace('\\', cls.FOLDER_SEPARATOR)
+                for x in psutil.disk_partitions(all=True)]
 
     @classmethod
     def has_valid_mountpoint(cls, path_str):
@@ -67,9 +69,9 @@ class Path(str):
             raise PathError(f'Input to constructor must be string, '
                             f'use elf() method for a softer approach.')
         if not os.path.isabs(path_str):
-            path_str = path_str.replace('\\', '/')
+            path_str = path_str.replace('\\', cls.FOLDER_SEPARATOR)
             path_str = os.path.abspath(path_str)
-        path_str = path_str.replace('\\', '/')
+        path_str = path_str.replace('\\', cls.FOLDER_SEPARATOR)
         # TODO: Add check on valid names
         instance = super(Path, cls).__new__(cls, path_str)
         if instance.platform() != cls.WINDOWS and ':' in path_str:
@@ -82,7 +84,7 @@ class Path(str):
         mountpoints = self.mountpoints()
         candidates = [x for x in mountpoints if self.startswith(x)]
         if len(candidates) > 1:
-            candidates = [x for x in candidates if not x == '/']
+            candidates = [x for x in candidates if not x == cls.SEPARATOR]
         if len(candidates) == 1:
             return Path(candidates[0])
         else:
@@ -126,7 +128,7 @@ class Path(str):
         return Zulu.fromtimestamp(os.stat(self).st_mtime)
 
     def parts(self):
-        parts = str(self).split('/')
+        parts = str(self).split(self.FOLDER_SEPARATOR)
         if parts[0] == '':
             return parts[1:]
         else:

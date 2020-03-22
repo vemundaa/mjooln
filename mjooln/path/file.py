@@ -226,7 +226,7 @@ class File(Path):
             shutil.move(self, new_file)
         return new_file
 
-    def copy(self, new_folder, new_name):
+    def copy(self, new_folder, new_name=None):
         if self.folder() == new_folder:
             raise FileError(f'Cannot copy a file to the same folder: {new_folder}')
         new_folder.touch()

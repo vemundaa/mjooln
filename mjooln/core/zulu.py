@@ -126,7 +126,7 @@ class Zulu(datetime.datetime):
     def range(cls, start=None, n=10, delta=datetime.timedelta(hours=1)):
         if not start:
             start = cls()
-        return [start + x * delta for x in range(n)]
+        return [cls(start + x * delta) for x in range(n)]
 
     @classmethod
     def from_iso_string(cls, timestamp_string_iso):

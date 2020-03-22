@@ -1,5 +1,5 @@
 import logging
-from mjooln import Root, Segment, SegmentError
+from mjooln import Root, Segment, SegmentError, CryptError, Folder, File
 from mjooln.tree.leaf import Leaf
 
 logger = logging.getLogger(__name__)
@@ -77,7 +77,7 @@ class Tree(Root):
                 raise TreeError(f'File name is not a valid segment: {native_file.name()}. '
                                 f'Add segment as parameter to override file name.') from se
         folder = self.branch(segment)
-        if not delete_source:
+        if delete_source:
             file = native_file.move(folder, new_name)
         else:
             file = native_file.copy(folder, new_name)
@@ -97,18 +97,22 @@ class Tree(Root):
         return leaves
 
     def shape(self, leaf):
-        if not leaf.is_compressed() and self.compress_all:
-            if leaf.is_encrypted():
+        try:
+            if not leaf.is_compressed() and self.compress_all:
+                if leaf.is_encrypted():
+                    leaf = leaf.decrypt(self._encryption_key)
+                leaf = leaf.compress()
+            elif leaf.is_compressed() and not self.compress_all:
+                if leaf.is_encrypted():
+                    leaf = leaf.decrypt(self._encryption_key)
+                leaf = leaf.decompress()
+            if not leaf.is_encrypted() and self.encrypt_all:
+                leaf = leaf.encrypt(self._encryption_key)
+            elif leaf.is_encrypted() and not self.encrypt_all:
                 leaf = leaf.decrypt(self._encryption_key)
-            leaf = leaf.compress()
-        elif leaf.is_compressed() and not self.compress_all:
-            if leaf.is_encrypted():
-                leaf = leaf.decrypt(self._encryption_key)
-            leaf = leaf.decompress()
-        if not leaf.is_encrypted() and self.encrypt_all:
-            leaf = leaf.encrypt(self._encryption_key)
-        elif leaf.is_encrypted() and not self.encrypt_all:
-            leaf = leaf.decrypt(self._encryption_key)
+        except CryptError as ce:
+            raise TreeError(f'Invalid or missing encryption key while '
+                            f'attempting reshape of {leaf}. Original error: {ce}')
 
         return Leaf.elf(leaf)
 
@@ -126,20 +130,36 @@ class Tree(Root):
             logger.debug(f'Move leaf: {leaf}')
         return leaf
 
-    def prune(self):
-        leaves = self.leaves()
-        for leaf in leaves:
-            tmp = self.prune_leaf(leaf)
-            _ = self.shape(tmp)
+    def prune(self, delete_not_leaf=True):
+        files = self.files()
+        for file in files:
+            try:
+                leaf = Leaf(file)
+                tmp = self.prune_leaf(leaf)
+                _ = self.shape(tmp)
+            except ValueError:
+                if delete_not_leaf:
+                    logger.warning(f'Delete file that is not leaf: {file}')
+                    file.delete()
 
-        folders = self._folder.folders()
-        for folder in folders:
+        folders = self.folders()
+        levels_and_folders = [(len(x.parts()), x) for x in folders]
+        levels_and_folders.sort(reverse=True)
+        for _, folder in levels_and_folders:
             if folder.is_empty():
                 folder.remove()
 
+    def folders(self, pattern='*', recursive=True):
+        paths = self._folder.folders(pattern=pattern, recursive=recursive)
+        return [Folder(x) for x in paths]
+
+    def files(self, pattern='*', recursive=True):
+        paths = self._folder.files(pattern=pattern, recursive=recursive)
+        return [File(x) for x in paths]
+
     def weeds(self):
         leaves = self.leaves()
-        files = self._folder.files(recursive=True)
+        files = self.files()
         not_leaves = len(files) - len(leaves)
         compression_mismatch = 0
         encryption_mismatch = 0
@@ -148,7 +168,7 @@ class Tree(Root):
                 compression_mismatch += 1
             if leaf.is_encrypted() != self.encrypt_all:
                 encryption_mismatch += 1
-        folders = self._folder.folders(recursive=True)
+        folders = self.folders()
         empty_folders = sum([x.is_empty() for x in folders])
         return {
             'not_leaves': not_leaves,
@@ -157,6 +177,10 @@ class Tree(Root):
             'empty_folders': empty_folders,
             'total_weeds': not_leaves + compression_mismatch + encryption_mismatch + empty_folders
         }
+
+    def total_weeds(self):
+        weeds = self.weeds()
+        return weeds['total_weeds']
 
 
 class TreeError(Exception):
