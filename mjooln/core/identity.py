@@ -9,6 +9,7 @@ class IdentityError(Exception):
 
 
 class Identity(str):
+    """UUID generator with convenience functions"""
 
     REGEX_STRING = r'[0-9A-F]{8}\_[0-9A-F]{4}\_[0-9A-F]{4}\_[0-9A-F]{4}' \
                    r'\_[0-9A-F]{12}'
@@ -27,7 +28,9 @@ class Identity(str):
         if res:
             return cls(res.group())
         else:
-            raise IdentityError(f'No identity found in this text: {text}')
+            raise IdentityError(f'No identity found in this text: {text}. '
+                                f'Consider using find_all, which will return '
+                                f'empty list if no identities are found.')
 
     @classmethod
     def find_all(cls, text):

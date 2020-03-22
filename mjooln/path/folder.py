@@ -2,7 +2,7 @@ import logging
 import os
 import shutil
 
-from mjooln.file.path import Path
+from mjooln.path.path import Path
 
 logger = logging.getLogger(__name__)
 
@@ -14,14 +14,7 @@ class Folder(Path):
         # Purely cosmetic for IDE
         return super().join(*args)
 
-    @classmethod
-    def elf(cls, folder, **kwargs):
-        if isinstance(folder, Folder):
-            return folder
-        else:
-            return super(Folder, cls).elf(folder)
-
-    def __new__(cls, path_str):
+    def __new__(cls, path_str, *args, **kwargs):
         instance = super(Folder, cls).__new__(cls, path_str)
         # if cls.RESERVED in instance:
         #     raise FolderError(f'Folder path cannot contain \'{cls.RESERVED}\''
@@ -33,10 +26,8 @@ class Folder(Path):
                 raise FolderError(f'Path is a file, not a folder: {str(instance)}')
         return instance
 
-    def name(self):
-        return os.path.basename(self)
-
     def create(self, error_if_exists=True):
+        """Create new folder, including non existent parent folders"""
         if not self.exists():
             os.makedirs(self)
             return True
@@ -46,22 +37,41 @@ class Folder(Path):
             return False
 
     def touch(self):
-        return self.create(error_if_exists=False)
+        """Create folder if it does not exist, ignore otherwise"""
+        self.create(error_if_exists=False)
+
+    def untouch(self):
+        """Remove folder if it exists, ignore otherwise"""
+        self.remove(error_if_not_exists=False)
 
     def parent(self):
         return Folder(os.path.dirname(self))
 
     def append(self, *args):
-        return Folder.join(self, *args)
-
-    def branch(self, branch):
-        return Folder.join(self, '/'.join(branch))
+        if len(args) == 1:
+            arg = args[0]
+            if isinstance(arg, list):
+                return Folder.join(self, '/'.join(arg))
+            else:
+                return Folder.join(self, arg)
+        else:
+            return Folder.join(self, *args)
 
     def is_empty(self):
         if self.exists():
             return len(list(self.list())) == 0
         else:
             raise FolderError(f'Cannot check if non existent folder is empty: {self}')
+
+    def disk_usage(self):
+        if self.exists():
+            paths = self.glob(recursive=True)
+            size = 0
+            for path in paths:
+                size += path.size()
+            return size
+        else:
+            raise FolderError(f'Cannot determine disk usage of non existent folder: {self}')
 
     def empty(self):
         if self.exists():
@@ -74,16 +84,23 @@ class Folder(Path):
         else:
             raise FolderError(f'Cannot empty a non existent folder: {self}')
 
-    def remove(self):
+    def remove(self, error_if_not_exists=True):
         if self.exists():
             os.rmdir(self)
         else:
-            raise FolderError(f'Cannot remove a non existent folder: {self}')
+            if error_if_not_exists:
+                raise FolderError(f'Cannot remove a non existent folder: {self}')
 
-    def folders(self):
-        paths = self.list()
-        return [Folder(x) for x in paths if x.is_folder()]
+    def name(self):
+        return os.path.basename(self)
 
 
 class FolderError(Exception):
     pass
+
+
+if __name__ == '__main__':
+    p = Folder.home()
+    print(p)
+    pp = Folder(p)
+    print(pp)

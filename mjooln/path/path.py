@@ -11,6 +11,7 @@ logger = logging.getLogger(__name__)
 
 class Path(str):
 
+    FOLDER_SEPARATOR = '/'
     LINUX = 'linux'
     WINDOWS = 'windows'
     OSX = 'osx'
@@ -22,7 +23,7 @@ class Path(str):
     }
 
     @classmethod
-    def home(cls):
+    def home(cls, *args, **kwargs):
         return cls(os.path.expanduser('~'))
 
     @classmethod
@@ -35,7 +36,8 @@ class Path(str):
 
     @classmethod
     def mountpoints(cls):
-        return [x.mountpoint.replace('\\', '/') for x in psutil.disk_partitions(all=True)]
+        return [x.mountpoint.replace('\\', cls.FOLDER_SEPARATOR)
+                for x in psutil.disk_partitions(all=True)]
 
     @classmethod
     def has_valid_mountpoint(cls, path_str):
@@ -61,15 +63,15 @@ class Path(str):
         else:
             return cls(path)
 
-    def __new__(cls, path_str):
-        # TODO: Try to return instance if exists
+    def __new__(cls, path_str, *args, **kwargs):
+        # TODO: Remove? Since inherits string, it should not matter.
         if not isinstance(path_str, str):
             raise PathError(f'Input to constructor must be string, '
                             f'use elf() method for a softer approach.')
         if not os.path.isabs(path_str):
-            path_str = path_str.replace('\\', '/')
+            path_str = path_str.replace('\\', cls.FOLDER_SEPARATOR)
             path_str = os.path.abspath(path_str)
-        path_str = path_str.replace('\\', '/')
+        path_str = path_str.replace('\\', cls.FOLDER_SEPARATOR)
         # TODO: Add check on valid names
         instance = super(Path, cls).__new__(cls, path_str)
         if instance.platform() != cls.WINDOWS and ':' in path_str:
@@ -82,9 +84,9 @@ class Path(str):
         mountpoints = self.mountpoints()
         candidates = [x for x in mountpoints if self.startswith(x)]
         if len(candidates) > 1:
-            candidates = [x for x in candidates if not x == '/']
+            candidates = [x for x in candidates if not x == cls.SEPARATOR]
         if len(candidates) == 1:
-            return Volume(candidates[0])
+            return Path(candidates[0])
         else:
             raise PathError(f'Could not determine volume: {mountpoints}')
 
@@ -96,7 +98,10 @@ class Path(str):
             raise PathError(f'Path does not exist: {self}')
 
     def is_volume(self):
-        return self in self.mountpoints()
+        if self.exists():
+            return self in self.mountpoints()
+        else:
+            raise PathError(f'Cannot see if non existent path is a volume or not: {self}')
 
     def is_folder(self):
         if self.exists():
@@ -111,7 +116,10 @@ class Path(str):
             raise PathError(f'Cannot see if non existent path is a file or not: {self}')
 
     def size(self):
-        return os.stat(self).st_size
+        if self.exists():
+            return os.stat(self).st_size
+        else:
+            raise PathError(f'Cannot determine size of non existent path: {self}')
 
     def created(self):
         return Zulu.fromtimestamp(os.stat(self).st_ctime)
@@ -120,47 +128,35 @@ class Path(str):
         return Zulu.fromtimestamp(os.stat(self).st_mtime)
 
     def parts(self):
-        parts = str(self).split('/')
+        parts = str(self).split(self.FOLDER_SEPARATOR)
         if parts[0] == '':
             return parts[1:]
         else:
             return parts
 
     def glob(self, pattern='*', recursive=False):
-        if self.is_folder():
-            if recursive:
-                paths = glob.glob(os.path.join(self, '**', pattern), recursive=recursive)
+        if self.exists():
+            if self.is_folder():
+                if recursive:
+                    paths = glob.glob(os.path.join(self, '**', pattern), recursive=recursive)
+                else:
+                    paths = glob.glob(os.path.join(self, pattern))
+                return (Path(x) for x in paths)
             else:
-                paths = glob.glob(os.path.join(self, pattern))
-            return (Path(x) for x in paths)
+                raise PathError(f'Cannot glob/list a file: {self}')
         else:
-            raise PathError(f'Cannot glob/list a file: {self}')
+            raise PathError(f'Cannot glob/list a non existent path: {self}')
 
     def list(self, pattern='*', recursive=False):
         return list(self.glob(pattern=pattern, recursive=recursive))
 
+    def folders(self, pattern='*', recursive=False):
+        paths = self.glob(pattern=pattern, recursive=recursive)
+        return [Path(x) for x in paths if x.is_folder()]
 
-class Volume(Path):
-    # TODO: Remove Volume class?
-
-    @classmethod
-    def elf(cls, path, **kwargs):
-        if isinstance(path, Volume):
-            return path
-        else:
-            return cls(path)
-
-    def __new__(cls, path_str):
-        # TODO: Add handling of network drive. Check if exists instead.
-        instance = super(Volume, cls).__new__(cls, path_str)
-        if not instance.is_volume():
-            raise VolumeError(f'Path \'{instance}\' is not a volume. '
-                              f'Allowed volumes are: {cls.mountpoints()}')
-        return instance
-
-
-class VolumeError(Exception):
-    pass
+    def files(self, pattern='*', recursive=False):
+        paths = self.glob(pattern=pattern, recursive=recursive)
+        return [Path(x) for x in paths if x.is_file()]
 
 
 class PathError(Exception):

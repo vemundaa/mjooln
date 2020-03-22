@@ -9,10 +9,11 @@ from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 
 
 class Crypt:
-    """ Wrapper for Best Practice key generation (ref Cryptography/Fernet)
+    """ Wrapper for best practice key generation and AES 128 encryption
 
     From Fernet doc:
     HMAC using SHA256 for authentication, and PKCS7 padding.
+    Uses AES in CBC mode with a 128-bit key for encryption, and PKCS7 padding.
     """
 
     @classmethod
@@ -42,15 +43,6 @@ class Crypt:
         )
         return base64.urlsafe_b64encode(kdf.derive(password))
 
-
-class AES(Crypt):
-    """ Wrapper for Best Practice AES 128 encryption (ref Cryptography/Fernet).
-
-    From Fernet doc:
-    Uses AES in CBC mode with a 128-bit key for encryption, and PKCS7 padding.
-    HMAC using SHA256 for authentication.
-    """
-
     @classmethod
     def encrypt(cls, data, key):
         if not type(data) == bytes:
@@ -62,7 +54,6 @@ class AES(Crypt):
 
     @classmethod
     def decrypt(cls, data, key):
-        # TODO: Catch InvalidToken error
         if not type(data) == bytes:
             raise CryptError('Cannot decrypt data. Data is not bytes')
         if not type(key) == bytes:
@@ -71,7 +62,7 @@ class AES(Crypt):
         try:
             return fernet.decrypt(data)
         except InvalidToken as it:
-            raise CryptError(f'Invalid token. Probably due to invalid password or key. '
+            raise CryptError(f'Invalid token. Probably due to invalid password/key. '
                              f'Actual message: {it}')
 
 

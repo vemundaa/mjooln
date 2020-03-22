@@ -5,6 +5,7 @@ logger = logging.getLogger(__name__)
 
 
 class Key(str):
+    """Defines key strings with limitations"""
 
     ALLOWED_CHARACTERS = string.ascii_lowercase + string.digits + '_'
     ALLOWED_STARTSWITH = string.ascii_lowercase

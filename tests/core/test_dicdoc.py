@@ -8,7 +8,7 @@ def test_dic():
     assert d.dic() == {'a': 3, 'b': 4}
     d = d.dic()
     dd = Dic()
-    dd.add_dic(d)
+    dd._add_dic(d)
     assert dd.dic() == d
     assert dd.a == 3
     assert dd.b == 4
@@ -28,7 +28,7 @@ def test_exists_only():
     d.a = 2
     d.b = 3
     d.c = 4
-    d.add_dic({'b': 5, 'bb': 6}, existing_only=True)
+    d.add_only_existing({'b': 5, 'bb': 6})
     assert d.dic() == {'a': 2, 'b': 5, 'c': 4}
 
 
@@ -37,7 +37,7 @@ def test_force_match():
     d.a = 2
     d.b = 3
     d.c = 4
-    d.add_dic({'a': 5, 'b': 6}, force_equal=True)
+    d.force_equal({'a': 5, 'b': 6})
     assert d.dic() == {'a': 5, 'b': 6}
 
 
@@ -58,7 +58,7 @@ def test_doc():
     d.z = Zulu()
     dd = d.doc()
     ddd = Doc()
-    ddd.add_doc(dd)
+    ddd._add_doc(dd)
     assert d.a == ddd.a
     assert d.b == ddd.b
     assert d.z == ddd.z
