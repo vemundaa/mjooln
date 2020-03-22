@@ -55,7 +55,7 @@ class Root(Doc):
         if compressed:
             file_name += File.EXTENSION_SEPARATOR + File.COMPRESSED_EXTENSION
         if encrypted:
-            file_name += File.EXTENSION_SEPARATOR + File.ENCRYPTED_EXTENSION
+            file_name += File.EXTENSION_SEPARATOR + File.CRYPT_EXTENSION
         return file_name
 
     @classmethod

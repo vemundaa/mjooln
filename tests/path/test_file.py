@@ -151,7 +151,7 @@ def test_encrypt(tmp_folder, tmp_files):
     assert extension == 'txt'
     assert not tmp_file.is_encrypted()
     key = mj.Crypt.generate_key()
-    efile = tmp_file.encrypt(key=key)
+    efile = tmp_file.encrypt(crypt_key=key)
     assert efile.extension() == 'txt'
     assert efile.is_encrypted()
 
@@ -184,7 +184,7 @@ def test_read_write_encrypted(tmp_folder):
     text = 'This is a sample text, in normal string format.'
     f = mj.File.join(tmp_folder, 'test.gz.aes')
     password = 'some password'
-    key = mj.Crypt.generate_key()
+    crypt_key = mj.Crypt.generate_key()
 
     with pytest.raises(mj.FileError):
         f.write(text)
@@ -192,23 +192,23 @@ def test_read_write_encrypted(tmp_folder):
     assert len(tmp_folder.list()) == 1
 
     with pytest.raises(mj.FileError):
-        f.read(key=key, password=password)
+        f.read(crypt_key=crypt_key, password=password)
     assert f.exists()
     with pytest.raises(mj.FileError):
         f.read()
     assert f.exists()
     with pytest.raises(mj.CryptError):
-        f.read(key=key)
+        f.read(crypt_key=crypt_key)
     assert f.exists()
     read_text = f.read(password=password)
     assert text == read_text
     assert len(tmp_folder.list()) == 1
 
     f.delete()
-    f.write(text, key=key)
+    f.write(text, crypt_key=crypt_key)
     assert len(tmp_folder.list()) == 1
     with pytest.raises(mj.FileError):
-        f.read(key=key, password=password)
+        f.read(crypt_key=crypt_key, password=password)
     assert f.exists()
     with pytest.raises(mj.FileError):
         f.read()
@@ -217,7 +217,7 @@ def test_read_write_encrypted(tmp_folder):
         f.read(password=password)
     assert f.exists()
     assert len(tmp_folder.list()) == 1
-    read_text = f.read(key=key)
+    read_text = f.read(crypt_key=crypt_key)
     assert text == read_text
     assert len(tmp_folder.list()) == 1
 

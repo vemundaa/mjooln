@@ -10,30 +10,41 @@ class TextFileError(Exception):
 
 class TextFile(File):
 
-    def write(self, text, *args, **kwargs):
+    def write(self, text, crypt_key=None, password=None, **kwargs):
         if not isinstance(text, str):
             raise TextFileError(f'Input data is not string, instead it is: {type(text)}')
-        if self._compressed:
-            super()._write_compressed(content=text)
-        else:
-            super()._write(content=text, mode='wt')
+        super().write(text, mode='wt', crypt_key=crypt_key, password=password)
 
-    def append(self, text):
+    def append(self, text, crypt_key=None, password=None, **kwargs):
         if not isinstance(text, str):
             raise TextFileError(f'Input data is not string, instead it is: {type(text)}')
-        if self._compressed:
-            raise TextFileError('Cannot append to compressed file.')
+        if self.is_compressed() or self.is_encrypted():
+            written_text = super().read(mode='rt', crypt_key=crypt_key, password=password)
+            text = written_text + text
+            super().write(text, mode='wt', crypt_key=crypt_key, password=password)
         else:
-            super()._write(content=text, mode='at+')
+            super().write(text, mode='at+')
 
-    def read(self, *args, **kwargs):
-        if self._compressed:
-            content = super()._read_compressed()
-            if isinstance(content, bytes):
-                content = content.decode()
-            return content
-        else:
-            return super()._read(mode='rt')
+    def read(self, crypt_key=None, password=None, **kwargs):
+        return super().read(mode='rt', crypt_key=crypt_key, password=password)
+
+    def compress(self, delete_original=True):
+        # Override super to return text file object
+        # TODO: Possible to avoid this hack?
+        return TextFile(super().compress(delete_original=delete_original))
+
+    def decompress(self, delete_original=True, replace_if_exists=True):
+        # Override super to return text file object
+        return TextFile(super().decompress(delete_original=delete_original,
+                                           replace_if_exists=replace_if_exists))
+
+    def encrypt(self, crypt_key, delete_original=True):
+        # Override super to return text file object
+        return TextFile(super().encrypt(crypt_key=crypt_key, delete_original=delete_original))
+
+    def decrypt(self, crypt_key, delete_original=True):
+        # Override super to return text file object
+        return TextFile(super().decrypt(crypt_key=crypt_key, delete_original=delete_original))
 
     @classmethod
     def new(cls, path, text):
@@ -54,9 +65,3 @@ class TextFile(File):
         else:
             raise TextFileError(f'File already exists: {file}')
         return file
-
-
-if __name__ == '__main__':
-    f = TextFile('hey.txt.gz')
-    f.write('something best')
-    print(f.read())

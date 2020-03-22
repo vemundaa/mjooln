@@ -7,12 +7,13 @@ class DocFileError(Exception):
 
 class DocFile(Doc):
 
-    def __init__(self, file_path, key=None, password=None, **kwargs):
+    def __init__(self, file_path, crypt_key=None, password=None, **kwargs):
         self._file = File(file_path)
         if self._file.is_encrypted():
-            self._key = File.key_from_key_or_password(key=key, password=password)
+            self._crypt_key = File.crypt_key_from_crypt_key_or_password(crypt_key=crypt_key,
+                                                                        password=password)
         else:
-            self._key = None
+            self._crypt_key = None
 
         if not self._file.extension() == 'json':
             raise DocFileError(f'Document file must be of type \'json\'. IE end with \'.json\', '
@@ -23,38 +24,21 @@ class DocFile(Doc):
         else:
             self.write()
 
-    def add(self, dic_or_doc):
-        super().add(dic_or_doc)
+    def add(self, dic_or_doc, ignore_private=True):
+        super().add(dic_or_doc, ignore_private=ignore_private)
         self.write()
 
-    def read(self, ):
-        dic = self._file.read(key=self._key)
-        self.add(dic)
+    def read(self, ignore_private=True):
+        dic = self._file.read(crypt_key=self._crypt_key)
+        self.add(dic, ignore_private=ignore_private)
 
-    def write(self):
-        dic = self.dic()
-        self._file.write(dic, key=self._key)
+    def write(self, ignore_private=True):
+        dic = self.dic(ignore_private=ignore_private)
+        self._file.write(dic, crypt_key=self._crypt_key)
 
     def file(self):
         return self._file
 
     def folder(self):
         return self._file.folder()
-
-
-class Ledger(DocFile):
-
-    def __init__(self, file, password=None, text=None, number=None):
-        self.text = text
-        self.number = number
-        super().__init__(file, password=password)
-
-
-if __name__ == '__main__':
-    l = Ledger('ledger.json.gz.aes', password='test')
-    l.dev_print()
-    l.number += 33
-    l.text = 'Some text you have'
-    l.write()
-    l.dev_print()
 

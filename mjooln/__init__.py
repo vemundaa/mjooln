@@ -10,7 +10,7 @@ from mjooln.path.file import File, FileError
 from mjooln.path.folder import Folder, FolderError
 
 from mjooln.file.doc_file import DocFile, DocFileError
-from mjooln.file.doc_folder import DocFolder, DocFolderError
+from mjooln.file.text_file import TextFile, TextFileError
 
 from mjooln.root.root import Root, RootError, NotRootException
 from mjooln.root.ground import Ground, GroundProblem
