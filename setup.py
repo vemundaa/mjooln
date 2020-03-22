@@ -5,8 +5,9 @@ with open('README') as f:
 
 setup(
     name='mjooln',
-    packages=['mjooln', 'mjooln.core', 'mjooln.file'],
-    version='0.3.5',
+    packages=['mjooln', 'mjooln.core', 'mjooln.path', 'mjooln.file',
+              'mjooln.root', 'mjooln.tree'],
+    version='0.3.6',
     license='MIT',
     description='Environmentally Friendly File Handling',
     long_description=long_description,
@@ -14,8 +15,9 @@ setup(
     author='Vemund Halmø Aarstrand',
     author_email='vemundaa@gmail.com',
     url='https://github.com/vemundaa/mjooln',
-    download_url='https://github.com/vemundaa/mjooln/archive/v_035.tar.gz',
-    keywords=['os', 'path', 'file', 'folder', 'file handling', 'encryption', 'compression'],
+    download_url='https://github.com/vemundaa/mjooln/archive/v_036.tar.gz',
+    keywords=['path', 'file', 'folder', 'file handling', 'encryption', 'compression',
+              'aes', 'gzip'],
     install_requires=[
         'python-dateutil',
         'pytz',
