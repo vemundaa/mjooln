@@ -22,7 +22,7 @@ copyright = '2020, Vemund Halmø Aarstrand'
 author = 'Vemund Halmø Aarstrand'
 
 # The full version, including alpha/beta/rc tags
-release = '0.3.5'
+release = '0.3.6 alpha'
 
 
 # -- General configuration ---------------------------------------------------
