@@ -35,11 +35,11 @@ class Segment:
                 raise SegmentError(f'\'{identity}\' is not Identity Object')
         elif len(kwargs) >= 1 and 'key' in kwargs:
             key = Key.elf(kwargs['key'])
-            if 'zulu' in kwargs:
+            if 'zulu' in kwargs and kwargs['zulu']:
                 zulu = Zulu.elf(kwargs['zulu'])
             else:
                 zulu = Zulu()
-            if 'identity' in kwargs:
+            if 'identity' in kwargs and kwargs['identity']:
                 identity = Identity.elf(kwargs['identity'])
             else:
                 identity = Identity()

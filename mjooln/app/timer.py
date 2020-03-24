@@ -62,6 +62,7 @@ class Timer(Configurable):
 
 
 if __name__ == '__main__':
+    print(Timer.default())
     t = Timer('me2')
     import time
     t.tic()
