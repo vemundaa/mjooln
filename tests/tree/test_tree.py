@@ -13,7 +13,7 @@ def test_tree(ground):
     assert tree._key == 'my_first_tree'
     assert len(ground.list()) == 1
     assert tree._folder.list() == []
-    assert tree.leaves() == []
+    assert list(tree.leaves()) == []
 
 
 def test_grow(ground, tmp_files):
@@ -23,9 +23,8 @@ def test_grow(ground, tmp_files):
         s = mj.Segment(key='just_for_test')
         tree.grow(file, s)
 
-    assert len(tree.leaves()) == num_files
-    weeds = tree.weeds()
-    assert weeds['total_weeds'] == 0
+    assert len(list(tree.leaves())) == num_files
+    assert tree.total_weeds() == 0
 
 
 def test_grow_compressed(ground, tmp_files):
@@ -35,22 +34,20 @@ def test_grow_compressed(ground, tmp_files):
         s = mj.Segment(key='just_for_test')
         tree.grow(file, s)
 
-    assert len(tree.leaves()) == num_files
-    weeds = tree.weeds()
-    assert weeds['total_weeds'] == 0
+    assert len(list(tree.leaves())) == num_files
+    assert tree.total_weeds() == 0
 
 
 def test_grow_encrypted(ground, tmp_files):
     num_files = len(tmp_files)
     tree = mj.Tree.plant(ground, 'my_second_tree',
-                         encrypt_all=True, encryption_key=mj.Crypt.generate_key())
+                         encrypt_all=True, crypt_key=mj.Crypt.generate_key())
     for file in tmp_files:
         s = mj.Segment(key='just_for_test')
         tree.grow(file, s)
 
-    assert len(tree.leaves()) == num_files
-    weeds = tree.weeds()
-    assert weeds['total_weeds'] == 0
+    assert len(list(tree.leaves())) == num_files
+    assert tree.total_weeds() == 0
 
 
 def test_reshape(ground, tmp_files):
@@ -62,83 +59,75 @@ def test_reshape(ground, tmp_files):
 
     leaves = tree.leaves()
     for leaf in leaves:
-        assert not leaf.is_compressed()
-    assert len(tree.leaves()) == num_files
-    weeds = tree.weeds()
-    assert weeds['total_weeds'] == 0
+        assert not leaf.file().is_compressed()
+    assert len(list(tree.leaves())) == num_files
+    assert tree.total_weeds() == 0
     tree.reshape(compress_all=True)
-    weeds = tree.weeds()
-    assert weeds['total_weeds'] == 0
+    assert tree.total_weeds() == 0
     leaves = tree.leaves()
-    assert len(leaves) == num_files
+    assert len(list(leaves)) == num_files
     for leaf in leaves:
-        assert leaf.is_compressed()
+        assert leaf.file().is_compressed()
 
     tree.reshape(compress_all=False)
-    weeds = tree.weeds()
-    assert weeds['total_weeds'] == 0
+    assert tree.total_weeds() == 0
     leaves = tree.leaves()
-    assert len(leaves) == num_files
+    assert len(list(leaves)) == num_files
     for leaf in leaves:
-        assert not leaf.is_compressed()
+        assert not leaf.file().is_compressed()
 
     # Test that tree cannot be encrypted if there was no encryption key added to tree class
-    with pytest.raises(mj.TreeError):
+    with pytest.raises(mj.LeafError):
         tree.reshape(encrypt_all=True)
 
 
 def test_reshape_encrypted(ground, tmp_files):
     num_files = len(tmp_files)
     tree = mj.Tree.plant(ground, 'my_second_tree',
-                         encrypt_all=True, encryption_key=mj.Crypt.generate_key())
+                         encrypt_all=True, crypt_key=mj.Crypt.generate_key())
     for file in tmp_files:
         s = mj.Segment(key='just_for_test')
         tree.grow(file, s)
 
-    assert len(tree.leaves()) == num_files
-    weeds = tree.weeds()
-    assert weeds['total_weeds'] == 0
+    assert len(list(tree.leaves())) == num_files
+    assert tree.total_weeds() == 0
     leaves = tree.leaves()
-    assert len(leaves) == num_files
+    assert len(list(leaves)) == num_files
     for leaf in leaves:
-        assert not leaf.is_compressed()
-        assert leaf.is_encrypted()
+        assert not leaf.file().is_compressed()
+        assert leaf.file().is_encrypted()
 
     tree.reshape(compress_all=True)
-    weeds = tree.weeds()
-    assert weeds['total_weeds'] == 0
+    assert tree.total_weeds() == 0
     leaves = tree.leaves()
-    assert len(leaves) == num_files
+    assert len(list(leaves)) == num_files
     for leaf in leaves:
-        assert leaf.is_compressed()
-        assert leaf.is_encrypted()
+        assert leaf.file().is_compressed()
+        assert leaf.file().is_encrypted()
 
     tree.reshape(compress_all=False)
-    weeds = tree.weeds()
-    assert weeds['total_weeds'] == 0
+    assert tree.total_weeds() == 0
     leaves = tree.leaves()
-    assert len(leaves) == num_files
+    assert len(list(leaves)) == num_files
     for leaf in leaves:
-        assert not leaf.is_compressed()
-        assert leaf.is_encrypted()
+        assert not leaf.file().is_compressed()
+        assert leaf.file().is_encrypted()
 
     tree.reshape(compress_all=False, encrypt_all=False)
-    weeds = tree.weeds()
-    assert weeds['total_weeds'] == 0
+    assert tree.total_weeds() == 0
     leaves = tree.leaves()
-    assert len(leaves) == num_files
+    assert len(list(leaves)) == num_files
     for leaf in leaves:
-        assert not leaf.is_compressed()
-        assert not leaf.is_encrypted()
+        assert not leaf.file().is_compressed()
+        assert not leaf.file().is_encrypted()
 
     tree.reshape(compress_all=True, encrypt_all=True)
-    weeds = tree.weeds()
-    assert weeds['total_weeds'] == 0
+    assert tree.total_weeds() == 0
     leaves = tree.leaves()
-    assert len(leaves) == num_files
+    assert len(list(leaves)) == num_files
     for leaf in leaves:
-        assert leaf.is_compressed()
-        assert leaf.is_encrypted()
+        assert leaf.file().is_compressed()
+        assert leaf.file().is_encrypted()
 
 
 def test_prune(error, ground, several_segment_files):
@@ -155,37 +144,32 @@ def test_prune(error, ground, several_segment_files):
     assert len(ground.list()) == 1
 
     leaves = tree.leaves()
-    assert len(leaves) == num_files
-    weeds = tree.weeds()
-    assert weeds['total_weeds'] == 0
+    assert len(list(leaves)) == num_files
+    assert tree.total_weeds() == 0
     assert len(tree._folder.list()) == num_files
 
-    tree.reshape(key_levels=2, date_levels=3, time_levels=3)
+    tree.reshape(key_level=2, date_level=3, time_level=3)
     leaves = tree.leaves()
-    assert len(leaves) == num_files
-    weeds = tree.weeds()
-    assert weeds['total_weeds'] == 0
+    assert len(list(leaves)) == num_files
+    assert tree.total_weeds() == 0
     assert len(tree._folder.list()) == 1
 
-    tree.reshape(key_levels=0, date_levels=0, time_levels=0)
+    tree.reshape(key_level=0, date_level=0, time_level=0)
     leaves = tree.leaves()
-    assert len(leaves) == num_files
-    weeds = tree.weeds()
-    assert weeds['total_weeds'] == 0
+    assert len(list(leaves)) == num_files
+    assert tree.total_weeds() == 0
     assert len(tree._folder.list()) == num_files
 
-    tree.reshape(key_levels=2, date_levels=2, time_levels=0)
+    tree.reshape(key_level=2, date_level=2, time_level=0)
     leaves = tree.leaves()
-    assert len(leaves) == num_files
-    weeds = tree.weeds()
-    assert weeds['total_weeds'] == 0
+    assert len(list(leaves)) == num_files
+    assert tree.total_weeds() == 0
     assert len(tree._folder.list()) == 1
 
-    tree.reshape(key_levels=1, date_levels=2, time_levels=2)
+    tree.reshape(key_level=1, date_level=2, time_level=2)
     leaves = tree.leaves()
-    assert len(leaves) == num_files
-    weeds = tree.weeds()
-    assert weeds['total_weeds'] == 0
+    assert len(list(leaves)) == num_files
+    assert tree.total_weeds() == 0
     assert len(tree._folder.list()) == 1
 
 
@@ -193,8 +177,8 @@ def test_weed(ground, several_tmp_files, several_segments):
     num_files = len(several_tmp_files)
     assert len(ground.list()) == num_files
     tree = mj.Tree.plant(ground, 'my_fourth_tree',
-                         encryption_key=mj.Crypt.generate_key(),
-                         key_levels=1, date_levels=1, time_levels=1)
+                         crypt_key=mj.Crypt.generate_key(),
+                         key_level=1, date_level=1, time_level=1)
     for file, segment in zip(several_tmp_files, several_segments):
         tree.grow(file, segment=segment, delete_source=False)
 
@@ -203,7 +187,7 @@ def test_weed(ground, several_tmp_files, several_segments):
 
     assert tree.total_weeds() == 0
     one_file = several_tmp_files[0]
-    one_folder = tree.leaves()[0].folder()
+    one_folder = list(tree.leaves())[0].file().folder()
     one_file.copy(one_folder)
     weeds = tree.weeds()
     assert weeds['total_weeds'] == 1
@@ -219,14 +203,14 @@ def test_weed(ground, several_tmp_files, several_segments):
     tree.prune()
     assert tree.total_weeds() == 0
 
-    leaf = tree.leaves()[0]
-    leaf.encrypt(tree._encryption_key)
+    leaf = list(tree.leaves())[0]
+    leaf.file().encrypt(tree._crypt_key)
     weeds = tree.weeds()
     assert weeds['total_weeds'] == 1
     assert weeds['encryption_mismatch'] == 1
 
-    leaf = tree.leaves()[1]
-    leaf.compress()
+    leaf = list(tree.leaves())[1]
+    leaf.file().compress()
     weeds = tree.weeds()
     assert weeds['total_weeds'] == 2
     assert weeds['encryption_mismatch'] == 1
@@ -235,24 +219,27 @@ def test_weed(ground, several_tmp_files, several_segments):
     tree.reshape(encrypt_all=True, compress_all=True)
     assert tree.total_weeds() == 0
 
-    leaf = tree.leaves()[0]
-    leaf.decrypt(tree._encryption_key)
+    leaf = list(tree.leaves())[0]
+    file = leaf.file()
+    file.decrypt(tree._crypt_key)
     weeds = tree.weeds()
     assert weeds['total_weeds'] == 1
     assert weeds['encryption_mismatch'] == 1
 
-    leaf = tree.leaves()[1]
-    leaf = leaf.decrypt(tree._encryption_key)
-    leaf = leaf.decompress()
-    _ = leaf.encrypt(tree._encryption_key)
+    leaf = list(tree.leaves())[1]
+    file = leaf.file()
+    file = file.decrypt(tree._crypt_key)
+    file = file.decompress()
+    _ = file.encrypt(tree._crypt_key)
     weeds = tree.weeds()
     assert weeds['total_weeds'] == 2
     assert weeds['encryption_mismatch'] == 1
     assert weeds['compression_mismatch'] == 1
 
-    leaf = tree.leaves()[2]
-    leaf = leaf.decrypt(tree._encryption_key)
-    _ = leaf.decompress()
+    leaf = list(tree.leaves())[2]
+    file = leaf.file()
+    file = file.decrypt(tree._crypt_key)
+    _ = file.decompress()
     weeds = tree.weeds()
     assert weeds['total_weeds'] == 4
     assert weeds['encryption_mismatch'] == 2

@@ -12,6 +12,7 @@ from mjooln.path.folder import Folder
 logger = logging.getLogger(__name__)
 
 
+# TODO: Handle reading/writing in pandas
 class File(Path):
 
     JSON_EXTENSION = 'json'
@@ -102,6 +103,15 @@ class File(Path):
                             f'not reserved ({self.RESERVED_EXTENSIONS}) '
                             f'extensions ({extensions}). '
                             f'Cannot determine a single extension: {self}')
+
+    # def rename_extension(self, extension):
+    #     new_name = self.stub()
+    #     new_name += self.EXTENSION_SEPARATOR + extension
+    #     if self.is_compressed():
+    #         new_name += self.EXTENSION_SEPARATOR + self.COMPRESSED_EXTENSION
+    #     if self.is_encrypted():
+    #         new_name += self.EXTENSION_SEPARATOR + self.CRYPT_EXTENSION
+    #     return new_name
 
     def md5_checksum(self):
         if not self.exists():
@@ -197,6 +207,8 @@ class File(Path):
                 data = self._read(mode=mode)
 
         if self._json:
+            if isinstance(data, bytes):
+                data = data.decode()
             data = Doc.doc_to_dic(data)
         return data
 

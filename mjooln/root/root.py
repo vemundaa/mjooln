@@ -88,6 +88,7 @@ class Root(Doc):
         except RootError:
             return False
 
+    # TODO: Remove default. Or implement properly.
     def __init__(self, folder_path, compressed=False, encrypted=False, default=False):
         if compressed or encrypted:
             raise RootError('Compression and encryption are not implemented.')

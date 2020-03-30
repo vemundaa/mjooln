@@ -13,6 +13,25 @@ class Key(str):
     RESERVED = '___'  # Used for separating key in segment
     SEPARATOR = '__'  # Separates groups in key
 
+    @classmethod
+    def elf(cls, key):
+        if isinstance(key, Key):
+            return key
+        else:
+            return cls(key)
+
+    @classmethod
+    def invalid_characters(cls, text):
+        return [x for x in text if x not in cls.ALLOWED_CHARACTERS]
+
+    @classmethod
+    def force_make(cls, text, replace_with='_'):
+        text = text.lower()
+        replace_chars = cls.invalid_characters(text)
+        for char in replace_chars:
+            text = text.replace(char, replace_with)
+        return cls(text)
+
     def __new__(cls, key):
         if isinstance(key, Key):
             key = str(key)
@@ -23,7 +42,7 @@ class Key(str):
             raise KeyFormatError(f'Invalid startswith. '
                                  f'Key \'{key}\' cannot start with \'{key[0]}\'. '
                                  f'Allowed startswith characters are: {cls.ALLOWED_STARTSWITH}')
-        invalid_characters = [x for x in key if x not in cls.ALLOWED_CHARACTERS]
+        invalid_characters = cls.invalid_characters(key)
         if len(invalid_characters) > 0:
             raise KeyFormatError(f'Invalid character(s). '
                                  f'Key \'{key}\' cannot contain any of {invalid_characters}. '
@@ -39,13 +58,6 @@ class Key(str):
 
     def with_separator(self, separator):
         return separator.join(self.parts())
-
-    @classmethod
-    def elf(cls, key):
-        if isinstance(key, Key):
-            return key
-        else:
-            return cls(key)
 
 
 class PrivateKey(Key):

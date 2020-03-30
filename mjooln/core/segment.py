@@ -10,6 +10,8 @@ logger = logging.getLogger(__name__)
 class Segment:
 
     SEPARATOR = '___'
+    LEVEL_FULL = 100
+    LEVEL_NONE = 0
 
     @classmethod
     def check(cls, dic):
@@ -54,28 +56,38 @@ class Segment:
     def __str__(self):
         return self.SEPARATOR.join([str(self.zulu), self.key, self.identity])
 
+    def dic(self):
+        return vars(self)
+
     def custom_separator(self, separator):
         return separator.join(str(self).split(self.SEPARATOR))
 
     def levels(self,
-               key_levels=1,
-               date_levels=1,
-               time_levels=0):
-        # TODO: Add negative input, to use as length of single key?
-        if key_levels == 1:
+               key_level=LEVEL_FULL,
+               date_level=LEVEL_FULL,
+               time_level=0):
+        # TODO: Refactor to find a way to have a second version of 0. Or int with direction?
+        if key_level == self.LEVEL_FULL:
             keys = [self.key]
         else:
-            keys = self.key.parts()[:key_levels]
+            keys = self.key.parts()[:abs(key_level)]
+        if key_level < 0:
+            keys = [''.join(keys)]
 
         zs = self.zulu.str
-        if date_levels == 1:
+        if date_level == self.LEVEL_FULL:
             dates = [zs.date]
         else:
-            dates = [zs.year, zs.month, zs.day][:date_levels]
-        if time_levels == 1:
+            dates = [zs.year, zs.month, zs.day][:abs(date_level)]
+        if date_level < 0:
+            dates = [''.join(dates)]
+
+        if time_level == self.LEVEL_FULL:
             times = [zs.time]
         else:
-            times = [zs.hour, zs.minute, zs.second][:time_levels]
+            times = [zs.hour, zs.minute, zs.second][:abs(time_level)]
+        if time_level < 0:
+            times = [''.join(times)]
 
         return keys + dates + times
 

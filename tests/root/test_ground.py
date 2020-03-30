@@ -19,7 +19,7 @@ def test_ground(tmp_folder):
     assert len(ground.roots()) == 3
     assert len(ground.list()) == 4
     dic1 = one_root.dic()
-    one_root = ground.root('one_root')
+    one_root = mj.Root(ground.root('one_root'))
     assert one_root.dic() == dic1
 
     with pytest.raises(mj.GroundProblem):

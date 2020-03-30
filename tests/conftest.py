@@ -2,6 +2,9 @@ import pytest
 import mjooln as mj
 import random
 import string
+import pandas as pd
+import numpy as np
+import random
 
 
 @pytest.fixture()
@@ -26,6 +29,16 @@ def dic():
     }
 
 
+def dev_create_df(count=10, start=None):
+    df = pd.DataFrame(index=mj.Zulu.range(n=count, start=start))
+    df.index.name = 'zulu'
+    df['one'] = np.random.rand(count)
+    texts = [''.join(random.choices(string.ascii_lowercase, k=9)) + str(x) for x in range(count)]
+    df['two'] = texts
+    df['three'] = np.random.rand(count)
+    return df
+
+
 def dev_create_test_files(files, num_chars=1000):
     import random
     import string
@@ -34,6 +47,30 @@ def dev_create_test_files(files, num_chars=1000):
                                       k=num_chars))
         file.write(text)
     return files
+
+
+def dev_create_test_csv_files(files):
+    start = mj.Zulu(2020, 1, 1)
+    delta = mj.Zulu.delta(hours=1)
+    for file in files:
+        n = random.randint(10,50)
+        df = dev_create_df(count=n, start=start)
+        df.to_csv(file)
+        start = df.index.max() + delta
+    return files
+
+
+@pytest.fixture()
+def dfs():
+    dfs = []
+    start = mj.Zulu(2020, 1, 1)
+    delta = mj.Zulu.delta(hours=1)
+    for i in range(10):
+        n = random.randint(10, 50)
+        df = dev_create_df(count=n, start=start)
+        dfs.append(df)
+        start = df.index.max() + delta
+    yield dfs
 
 
 @pytest.fixture()
@@ -50,6 +87,15 @@ def tmp_folder():
 def tmp_files(tmp_folder):
     files = [mj.File.join(tmp_folder, f'test_{i}.txt') for i in range(3)]
     dev_create_test_files(files)
+    yield files
+    for file in files:
+        file.delete(missing_ok=True)
+
+
+@pytest.fixture()
+def tmp_csv_files(tmp_folder):
+    files = [mj.File.join(tmp_folder, f'test_{i}.csv') for i in range(3)]
+    dev_create_test_csv_files(files)
     yield files
     for file in files:
         file.delete(missing_ok=True)

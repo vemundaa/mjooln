@@ -83,6 +83,21 @@ class Zulu(datetime.datetime):
         return self.strftime(self.FORMAT_STRING)
 
     @classmethod
+    def find_one(cls, text):
+        res = cls.REGEX.search(text)
+        if res:
+            return cls(res.group())
+        else:
+            raise ZuluError(f'No zulu found in this text: {text}. '
+                            f'Consider using find_all, which will return '
+                            f'empty list if no zulus are found.')
+
+    @classmethod
+    def find_all(cls, text):
+        zulus = cls.REGEX.findall(text)
+        return [cls(x) for x in zulus]
+
+    @classmethod
     def elf(cls, *args, **kwargs):
         if len(args) == 1 and len(kwargs) == 0:
             maybe_zulu = args[0]
@@ -141,13 +156,23 @@ class Zulu(datetime.datetime):
 
     @classmethod
     def parse(cls, string, pattern, is_local=False):
+        """Wrapper for datetime.datetime.strptime"""
         ts = datetime.datetime.strptime(string, pattern)
         if is_local:
             return cls.from_unaware_local(ts)
         else:
             return cls(ts.replace(tzinfo=pytz.utc))
 
+    @classmethod
+    def delta(cls, days=0, seconds=0, microseconds=0, milliseconds=0,
+              minutes=0, hours=0, weeks=0):
+        """Wrapper for datetime.timedelta"""
+        return datetime.timedelta(days=days, seconds=seconds, microseconds=microseconds,
+                                  milliseconds=milliseconds, minutes=minutes,
+                                  hours=hours, weeks=weeks)
+
     def format(self, pattern):
+        """Wrapper for datetime.datetime.strftime"""
         return self.strftime(pattern)
 
 

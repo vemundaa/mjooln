@@ -12,8 +12,13 @@ from mjooln.path.folder import Folder, FolderError
 from mjooln.file.doc_file import DocFile, DocFileError
 from mjooln.file.text_file import TextFile, TextFileError
 
-from mjooln.root.root import Root, RootError, NotRootException
+from mjooln.root.root import Root, NotRootException, RootError
 from mjooln.root.ground import Ground, GroundProblem
 
-from mjooln.tree.leaf import Leaf, LeafError
+from mjooln.tree.leaf import Leaf, NotALeafError, LeafError
 from mjooln.tree.tree import Tree, TreeError
+
+from mjooln.tree.birch.tree import Birch, BirchLeaf, NotABirchLeaf, BirchError
+from mjooln.tree.oak.tree import Oak, OakLeaf, NotAnOakLeaf, OakError
+# from mjooln.tree.bamboo.bamboo import Bamboo, BambooError
+# from mjooln.tree.bamboo.sprout import Sprout, SproutError

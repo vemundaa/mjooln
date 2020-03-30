@@ -87,38 +87,64 @@ class Dic:
         self._dev_print(self.dic(ignore_private=ignore_private), level=0)
         print(width*'-')
 
+    def flatten(self, separator='__', ignore_private=True):
+        dic = self.dic(ignore_private=ignore_private)
+        flat_dic = dict()
+        flat_dic = self._flatten(flat_dic=flat_dic, parent_key='',
+                                 dic=dic, separator=separator)
+        return flat_dic
+
+    def _flatten(self, flat_dic, parent_key, dic, separator='__', ):
+        for key, item in dic.items():
+            if isinstance(item, dict):
+                flat_dic = self._flatten(flat_dic=flat_dic, parent_key=key,
+                                         dic=item, separator=separator)
+            else:
+                if parent_key:
+                    flat_dic[parent_key + separator + key] = item
+                else:
+                    flat_dic[key] = item
+        return flat_dic
+
     def _dev_print(self, dic, level=0, indent=4*' '):
         for key, item in dic.items():
             if isinstance(item, dict):
+                print(level*indent + f'{key}: {{dict}}')
                 self._dev_print(item, level=level+1)
             else:
-                print(level*indent + f'{key}: [{type(item).__name__}] {item} ')
+                print(level*indent + f'{key}: {{{type(item).__name__}}} {item} ')
 
     @classmethod
     def _from_strings(cls, dic):
-        for key, item in dic.items():
-            if isinstance(item, str):
-                dic[key] = Zulu.string_elf(item)
-            elif isinstance(item, dict):
-                dic[key] = cls._from_strings(item)
-                if Segment.check(dic[key]):
-                    dic[key] = Segment(**dic[key])
-            elif isinstance(item, Dic):
-                dic[key] = cls._from_strings(item.dic())
-        return dic
+        if isinstance(dic, list):
+            return [cls._from_strings(x) for x in dic]
+        else:
+            for key, item in dic.items():
+                if isinstance(item, str):
+                    dic[key] = Zulu.string_elf(item)
+                elif isinstance(item, dict):
+                    dic[key] = cls._from_strings(item)
+                    if Segment.check(dic[key]):
+                        dic[key] = Segment(**dic[key])
+                elif isinstance(item, Dic):
+                    dic[key] = cls._from_strings(item.dic())
+            return dic
 
     @classmethod
     def _to_strings(cls, dic):
-        for key, item in dic.items():
-            if isinstance(item, Zulu):
-                dic[key] = item.to_iso_string()
-            elif isinstance(item, Segment):
-                dic[key] = cls._to_strings(vars(item))
-            elif isinstance(item, dict):
-                dic[key] = cls._to_strings(item)
-            elif isinstance(item, Dic):
-                dic[key] = cls._to_strings(item.dic())
-        return dic
+        if isinstance(dic, list):
+            return [cls._to_strings(x) for x in dic]
+        else:
+            for key, item in dic.items():
+                if isinstance(item, Zulu):
+                    dic[key] = item.to_iso_string()
+                elif isinstance(item, Segment):
+                    dic[key] = cls._to_strings(vars(item))
+                elif isinstance(item, dict):
+                    dic[key] = cls._to_strings(item)
+                elif isinstance(item, Dic):
+                    dic[key] = cls._to_strings(item.dic())
+            return dic
 
 
 class DocError(Exception):
@@ -158,3 +184,14 @@ class Doc(Dic):
         dic = self.dic(ignore_private=ignore_private)
         dic = self._to_strings(dic)
         return JSON.dumps(dic)
+
+
+if __name__ == '__main__':
+    dic = Dic()
+    dic.a = 'bb'
+    dic.b = {
+        'a': 4,
+        'b': 22,
+    }
+    dic2 = dic.flatten()
+    print(dic2)

@@ -1,4 +1,4 @@
-from mjooln import Root, Dic, Folder, File, RootError, Zulu
+from mjooln import Root, Dic, Folder, File, RootError, Zulu, NotRootException
 
 # TODO: A field can have split trees (identical, indexed, and with randomized where each leaf is)
 
@@ -7,6 +7,7 @@ class GroundProblem(Exception):
     pass
 
 
+# TODO: Need Ground Elf to handle the different roots?
 class Ground(Folder):
     """Folder wrapper with the ability to list roots within"""
     FILE_NAME = f'{File.HIDDEN_STARTSWITH}ground{File.EXTENSION_SEPARATOR}{File.JSON_EXTENSION}'
@@ -53,6 +54,22 @@ class Ground(Folder):
         folder = Folder.home()
         return cls.settle(folder, name=name)
 
+    @classmethod
+    def home(cls):
+        return cls(super(Ground, cls).home())
+
+    @classmethod
+    def elf(cls, path=None, **kwargs):
+        if not path:
+            folder = Folder.home()
+        else:
+            folder = Folder.elf(path)
+        folder.touch()
+        if not cls.is_ground(folder):
+            return cls.settle(folder)
+        else:
+            return cls(folder)
+
     def __str__(self):
         return f'ground@{self.name()}'
 
@@ -76,7 +93,20 @@ class Ground(Folder):
         self._file(self).delete()
 
     def root(self, key):
-        return Root(self.append(key))
+        if self.is_root(key):
+            return self.append(key)
+        else:
+            raise GroundProblem(f'Key \'{key}\' is not root in this ground (\'{self}\'). '
+                                f'Try planting it or look somewhere else.')
+
+    def is_root(self, key):
+        folder = self.append(key)
+        try:
+            # TODO: Refactor to not use exception?
+            _ = Root(folder)
+            return True
+        except NotRootException:
+            return False
 
     def roots(self):
         paths = self.list()
@@ -85,7 +115,7 @@ class Ground(Folder):
         for folder in folders:
             try:
                 root = Root(folder)
-                roots.append(root)
+                roots.append(folder)
             except RootError:
                 pass
         return roots

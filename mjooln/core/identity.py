@@ -34,7 +34,7 @@ class Identity(str):
 
     @classmethod
     def find_all(cls, text):
-        ids = re.findall(cls.REGEX_STRING, text)
+        ids = cls.REGEX.findall(text)
         return [cls(x) for x in ids]
 
     @classmethod
