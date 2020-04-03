@@ -9,7 +9,8 @@ logger = logging.getLogger(__name__)
 class Stats(Dic):
 
     def __init__(self):
-        # TODO: Add configurable history for sum and delta. IE sliding averages
+        # TODO: Add configurable history for x, with sliding averages of x and delta
+        # TODO: This setting would replace full history
         self.x = np.nan
         self.count = 0
         self.sum = 0.0

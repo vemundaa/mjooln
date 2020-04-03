@@ -4,6 +4,7 @@ import logging
 import socket
 from mjooln.core.zulu import Zulu
 import psutil
+import shutil
 from sys import platform
 
 logger = logging.getLogger(__name__)
@@ -51,6 +52,39 @@ class Path(str):
         else:
             raise PathError(f'Unknown platform {platform}. '
                             f'Known platforms are: {cls.PLATFORM.keys()}')
+
+    @classmethod
+    def location(cls):
+        return {
+            'zulu': Zulu(),
+            'platform': cls.platform(),
+            'host': cls.host(),
+        }
+
+    @classmethod
+    def virtual_memory(cls):
+        mem = psutil.virtual_memory()
+        return {
+            'total': mem.total,
+            'available': mem.available,
+            'percent': mem.percent,
+            'used': mem.used,
+            'free': mem.free,
+            'active': mem.active,
+            'inactive': mem.inactive,
+            'wired': mem.wired,
+        }
+
+    @classmethod
+    def disk_usage(cls):
+        current = cls('.')
+        usage = shutil.disk_usage(current)
+        return {
+            'total': usage.total,
+            'used': usage.used,
+            'free': usage.free,
+        }
+
 
     @classmethod
     def host(cls):
