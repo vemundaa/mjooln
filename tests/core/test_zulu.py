@@ -5,11 +5,14 @@ from mjooln import Zulu
 
 
 def test_zulu():
+    # TODO: Test convenience methods (parse, elf etc)
     zstr = '20200106T073022u399776Z'
     z = Zulu(zstr)
     assert str(z) == zstr
     isostr = '2020-01-06T07:30:22.399776+00:00'
-    assert z.to_iso_string() == isostr
+    assert z.iso() == isostr
+    z = Zulu.parse_iso(isostr)
+    assert z.iso() == isostr
     z = Zulu(2019, 5, 5)
     assert str(z) == '20190505T000000u000000Z'
     z = Zulu(2019, 5, 5, 6, 6, 7)

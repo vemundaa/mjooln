@@ -111,7 +111,7 @@ class Dic:
     def _to_strings(cls, dic):
         for key, item in dic.items():
             if isinstance(item, Zulu):
-                dic[key] = item.to_iso_string()
+                dic[key] = item.iso()
             elif isinstance(item, Segment):
                 dic[key] = cls._to_strings(vars(item))
             elif isinstance(item, dict):
