@@ -55,9 +55,9 @@ class Tree(Root):
         self._encryption_key = encryption_key
 
     def branch(self, segment):
-        levels = segment.levels(key_levels=self.key_levels,
-                                date_levels=self.date_levels,
-                                time_levels=self.time_levels)
+        levels = segment.levels(key_level=self.key_levels,
+                                date_level=self.date_levels,
+                                time_level=self.time_levels)
         return self._folder.append(levels)
 
     def grow(self, native_file, segment=None, delete_source=True):

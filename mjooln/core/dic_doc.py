@@ -1,28 +1,27 @@
 import json
 import simplejson
 
-from mjooln.core.zulu import Zulu
+from mjooln.core.zulu import Zulu, ZuluError
 from mjooln.core.segment import Segment
 
 
 # TODO: Add custom class handling, including reserved words
 class JSON:
     """Dict to/from JSON string, with optional human readable"""
-
     @classmethod
-    def dumps(cls, dictionary, human=True, sort_keys=False, indent=4 * ' '):
+    def dumps(cls, dic, human=True, sort_keys=False, indent=4 * ' '):
         """Convert from dict to JSON string
 
-        :param dictionary: Input dictionary
-        :type dictionary: dict
+        :param dic: Input dictionary
+        :type dic: dict
         :param human: Human readable flag
         :param sort_keys: Sort key flag
         :param indent: Indent to use (human readable only)
         """
         if human:
-            return simplejson.dumps(dictionary, sort_keys=sort_keys, indent=indent)
+            return simplejson.dumps(dic, sort_keys=sort_keys, indent=indent)
         else:
-            return json.dumps(dictionary)
+            return json.dumps(dic)
 
     @classmethod
     def loads(cls, json_string):
@@ -95,10 +94,21 @@ class Dic:
                 print(level*indent + f'{key}: [{type(item).__name__}] {item} ')
 
     @classmethod
+    def _parse_if_iso(cls, string):
+        try:
+            zulu = Zulu.parse_iso(string)
+            return zulu
+        except ValueError:
+            pass
+        except ZuluError:
+            pass
+        return string
+
+    @classmethod
     def _from_strings(cls, dic):
         for key, item in dic.items():
             if isinstance(item, str):
-                dic[key] = Zulu.string_elf(item)
+                dic[key] = cls._parse_if_iso(item)
             elif isinstance(item, dict):
                 dic[key] = cls._from_strings(item)
                 if Segment.check(dic[key]):

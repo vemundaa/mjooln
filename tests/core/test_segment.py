@@ -8,7 +8,7 @@ def test_segment():
     z = Zulu()
     i = Identity()
     s = Segment(z, k, i)
-    assert str(s) == f'{z}{Segment.SEPARATOR}{k}{Segment.SEPARATOR}{i}'
+    assert str(s) == f'{z}{Segment._SEPARATOR}{k}{Segment._SEPARATOR}{i}'
     assert s.key == k
     assert s.zulu == z
     assert s.identity == i
@@ -23,10 +23,10 @@ def test_segment():
         Segment(zulu=z, identity=i)
 
     with pytest.raises(ValueError):
-        Segment(f'{z}{k}{Segment.SEPARATOR}{i}')
+        Segment(f'{z}{k}{Segment._SEPARATOR}{i}')
 
     with pytest.raises(ValueError):
-        Segment(f'{z}{Segment.SEPARATOR}{k}{i}')
+        Segment(f'{z}{Segment._SEPARATOR}{k}{i}')
 
     with pytest.raises(ValueError):
         Segment('This is not a segment')
