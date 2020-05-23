@@ -8,7 +8,7 @@ setup(
     packages=['mjooln', 'mjooln.core', 'mjooln.path', 'mjooln.file',
               'mjooln.root', 'mjooln.tree'],
     version='0.3.6',
-    license='MIT',
+    license='BSD',
     description='Environmentally Friendly File Handling',
     long_description=long_description,
     long_description_content_type='text/markdown',
