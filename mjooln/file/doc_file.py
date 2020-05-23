@@ -10,15 +10,17 @@ class DocFile(Doc):
     def __init__(self, file_path, crypt_key=None, password=None, **kwargs):
         self._file = File(file_path)
         if self._file.is_encrypted():
-            self._crypt_key = File.crypt_key_from_crypt_key_or_password(crypt_key=crypt_key,
-                                                                        password=password)
+            self._crypt_key = File.crypt_key_from_crypt_key_or_password(
+                crypt_key=crypt_key,
+                password=password)
         else:
             self._crypt_key = None
 
         if not self._file.extension() == 'json':
-            raise DocFileError(f'Document file must be of type \'json\'. IE end with \'.json\', '
-                               f'\'.json.gz.\' or \'json.gz.aes\'. '
-                               f'The input path doesnt: {file_path}')
+            raise DocFileError(f'Document file must be of type \'json\'. '
+                               f'IE end with \'.json\', '
+                               f'\'.json.gz\' or \'json.gz.aes\'. '
+                               f'The input path does not: {file_path}')
         if self._file.exists():
             self.read()
         else:

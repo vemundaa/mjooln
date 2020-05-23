@@ -11,7 +11,7 @@ from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 class Crypt:
     """ Wrapper for best practice key generation and AES 128 encryption
 
-    From `Fernet doc <https://cryptography.io/en/latest/fernet/>`_:
+    From `Fernet Docs <https://cryptography.io/en/latest/fernet/>`_:
     HMAC using SHA256 for authentication, and PKCS7 padding.
     Uses AES in CBC mode with a 128-bit key for encryption, and PKCS7 padding.
     """
