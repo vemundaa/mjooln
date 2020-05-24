@@ -16,7 +16,7 @@ setup(
     author_email='vemundaa@gmail.com',
     url='https://github.com/vemundaa/mjooln',
     download_url='https://github.com/vemundaa/mjooln/archive/v_036.tar.gz',
-    keywords=['json', 'file', 'folder', 'file handling',
+    keywords=['json', 'path', 'file', 'folder', 'file handling',
               'encryption', 'compression', 'aes', 'gzip'],
     install_requires=[
         'python-dateutil',

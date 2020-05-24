@@ -166,7 +166,7 @@ class Doc(Dic):
     strings
 
     Special cases:
-    
+
     - Zulu objects will be converted to an ISO 8601 string before a dictionary
       is converted to JSON
     - ISO 8601 strings that are time zone aware with UTC, will be converted to
