@@ -4,6 +4,8 @@ MANIFEST
 .venv/
 dist/
 
+docs/_build
+
 mjooln/__pycache__/
 
 *.pyc
