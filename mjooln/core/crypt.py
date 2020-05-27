@@ -16,6 +16,8 @@ class Crypt:
     Uses AES in CBC mode with a 128-bit key for encryption, and PKCS7 padding.
     """
 
+    # TODO: Do QA on cryptographic strength
+
     @classmethod
     def generate_key(cls):
         """ Generates URL-safe base64-encoded random key with length 44 """

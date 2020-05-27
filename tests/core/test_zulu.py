@@ -19,7 +19,7 @@ def test_zulu_local():
     b = a.to_local()
     assert not isinstance(b, Zulu)
 
-    c = Zulu.from_local(b.replace(tzinfo=None))
+    c = Zulu.from_unaware_local(b.replace(tzinfo=None))
     d = c.to_local()
     assert b.hour == d.hour
 
