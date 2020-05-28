@@ -48,14 +48,14 @@ class Root(Doc):
 
     @classmethod
     def _file_name(cls, folder, compressed=False, encrypted=False):
-        file_name = File.HIDDEN_STARTSWITH + \
+        file_name = File._HIDDEN_STARTSWITH + \
                     folder.name() + \
-                    File.EXTENSION_SEPARATOR + \
-                    File.JSON_EXTENSION
+                    File._EXTENSION_SEPARATOR + \
+                    File._JSON_EXTENSION
         if compressed:
-            file_name += File.EXTENSION_SEPARATOR + File.COMPRESSED_EXTENSION
+            file_name += File._EXTENSION_SEPARATOR + File._COMPRESSED_EXTENSION
         if encrypted:
-            file_name += File.EXTENSION_SEPARATOR + File.CRYPT_EXTENSION
+            file_name += File._EXTENSION_SEPARATOR + File._CRYPT_EXTENSION
         return file_name
 
     @classmethod

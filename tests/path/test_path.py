@@ -47,7 +47,7 @@ def paths(tmp_folder):
 def test_slashes():
     assert mj.Path('/') == '/'
     assert mj.Path('\\') == '/'
-    if mj.Path.platform() == mj.Path.WINDOWS:
+    if mj.Path.platform() == mj.Path._WINDOWS:
         assert mj.Path('C:\\dev\\dummy') == 'C:/dev/dummy'
         assert mj.Path('C:/dev\\dummy') == 'C:/dev/dummy'
     else:
@@ -56,7 +56,7 @@ def test_slashes():
 
 
 def test_drives():
-    if mj.Path.platform() == mj.Path.WINDOWS:
+    if mj.Path.platform() == mj.Path._WINDOWS:
         assert mj.Path('C:/dev/dummy').mountpoint() == 'C:'
     else:
         with pytest.raises(mj.PathError):
@@ -67,7 +67,7 @@ def test_drives():
 
 
 def test_parts():
-    if mj.Path.platform() == mj.Path.WINDOWS:
+    if mj.Path.platform() == mj.Path._WINDOWS:
         assert mj.Path('C:/dev/dummy').parts() == ['C:', 'dev', 'dummy']
     assert mj.Path('/how/to/do/this').parts() == ['how', 'to', 'do', 'this']
     assert mj.Path('/and\\odd/slashes').parts() == ['and', 'odd', 'slashes']

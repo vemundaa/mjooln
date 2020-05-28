@@ -78,9 +78,9 @@ def test_zulu_elf():
     assert str(z) == str(Zulu.elf(dtt))
 
     dt = dt.replace(tzinfo=None)
-    assert str(z) == str(Zulu.elf(dt, tz_assume='local'))
+    assert str(z) == str(Zulu.elf(dt, tz='local'))
     dtz = z.to_tz('utc').replace(tzinfo=None)
-    assert str(z) == str(Zulu.elf(dtz, tz_assume='utc'))
+    assert str(z) == str(Zulu.elf(dtz, tz='utc'))
     assert str(z) == str(Zulu.elf(z))
 
 
