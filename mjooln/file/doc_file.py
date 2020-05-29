@@ -6,11 +6,19 @@ class DocFileError(Exception):
 
 
 class DocFile(Doc):
+    """
+    Enables mirroring attributes to a JSON file
+
+    .. note:: Meant for inheritance and more advanced functionality,
+        not direct use
+
+    .. warning:: May very well prove useless
+    """
 
     def __init__(self, file_path, crypt_key=None, password=None, **kwargs):
         self._file = File(file_path)
         if self._file.is_encrypted():
-            self._crypt_key = File.crypt_key_from_crypt_key_or_password(
+            self._crypt_key = File._crypt_key(
                 crypt_key=crypt_key,
                 password=password)
         else:

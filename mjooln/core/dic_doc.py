@@ -38,6 +38,8 @@ class Dic:
     """Enables child classes to mirror attributes and dictionaries
 
     Private variables start with underscore, and are ignored by default.
+
+    .. note:: Meant for inheritance and not direct use
     """
 
     # TODO: Consider moving ignore_private to a private class attribute

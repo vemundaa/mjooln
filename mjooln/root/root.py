@@ -15,14 +15,28 @@ class NotRootException(RootError):
 
 # TODO: Rewrite root as file?
 class Root(Doc):
-    """ Combination of a folder and a file that defines a particular spot in the file system.
+    """
+    Combination of a folder and a file that defines a particular spot in
+    the file system.
 
-    A root with name "julian", has a folder with the path ../julian, and in this
-    folder is a file with the name .julian.json, containing root attributes.
-    One of the attributes must be "key", and this attribute must equal "julian". Thus there
-    is a triplet defining a particular folder as a valid root.
+    Root key follows limitations of class :class:`.Key`.
+    If root key is ``julian``,
+    the following triplet of rules define a folder as a valid Root:
 
-    A root class also stores all attributes (except private) in file.
+    1. Folder path is ``../julian``
+    2. Folder contains a JSON file with name ``.julian.json``. The file may
+       be compressed, adding extension ``.gz``, or encrypted, adding
+       extension ``.aes``
+    3. JSON file contains a dictionary, where one top level key is ``_root``,
+       and the contents of the key is of type :class:`.Segment`, where
+       ``Segment.key=julian``
+
+    This triplet defines a Root as valid independent of file system, database
+    entry or configuration file entry, allowing it to be used as a standalone
+    knot of data, identifiable by shape and not identity.
+
+    The Root class also stores all attributes, except private, in the JSON
+    file. The key ``_root`` is reserved for class private attributes.
 
     """
     # TODO: Add segment and species description. Also needs to be planted
@@ -36,7 +50,8 @@ class Root(Doc):
         folder = ground.append(key)
         if folder.exists():
             raise RootError(f'Cannot plant root in existing folder: {folder}. '
-                            f'Empty and remove folder first. Or use a different folder.')
+                            f'Empty and remove folder first. '
+                            f'Or use a different folder.')
         root = cls(folder, default=True)
         folder.create()
         root._key = key
@@ -73,9 +88,10 @@ class Root(Doc):
             root._file.delete()
         if root._folder.exists():
             if not folder.is_empty():
-                raise RootError('Folder is not empty. Cannot plant anything here, '
-                                'as there are limits to the force applied. '
-                                'Use uproot, and with_force=True, then plant.')
+                raise RootError('Folder is not empty. Cannot plant anything '
+                                'here, as there are limits to the force '
+                                'applied. Use uproot, and with_force=True, '
+                                'then plant.')
 
         root.write()
         return root
@@ -88,7 +104,10 @@ class Root(Doc):
         except RootError:
             return False
 
-    def __init__(self, folder_path, compressed=False, encrypted=False, default=False):
+    def __init__(self, folder_path,
+                 compressed=False,
+                 encrypted=False,
+                 default=False):
         if compressed or encrypted:
             raise RootError('Compression and encryption are not implemented.')
         self._folder = Folder(folder_path)
@@ -131,7 +150,8 @@ class Root(Doc):
                                     f'uproot with force: key={self._key}')
             else:
                 raise RootError(f'Root folder ({self}) is not empty. '
-                                f'Uproot with force to empty it: with_force=True')
+                                f'Uproot with force to empty it: '
+                                f'with_force=True')
         if self._file.exists():
             self._file.delete()
         self._folder.remove()

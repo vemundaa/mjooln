@@ -9,7 +9,8 @@ class GroundProblem(Exception):
 
 class Ground(Folder):
     """Folder wrapper with the ability to list roots within"""
-    FILE_NAME = f'{File._HIDDEN_STARTSWITH}ground{File._EXTENSION_SEPARATOR}{File._JSON_EXTENSION}'
+    FILE_NAME = f'{File._HIDDEN_STARTSWITH}ground' \
+                f'{File._EXTENSION_SEPARATOR}{File._JSON_EXTENSION}'
 
     @classmethod
     def search_for(cls):
@@ -30,7 +31,8 @@ class Ground(Folder):
     @classmethod
     def settle(cls, folder, given_name='nn', **kwargs):
         if not folder.exists():
-            raise GroundProblem(f'Cannot settle if the folder does not exist: {folder}')
+            raise GroundProblem(f'Cannot settle if the folder '
+                                f'does not exist: {folder}')
         file = cls._file(folder)
         if file.exists():
             dic = file.read()
@@ -38,7 +40,8 @@ class Ground(Folder):
                 name_ = dic['given_name']
             else:
                 name_ = 'nn'
-            raise GroundProblem(f'This folder is already occupied by \'{name_}\'.')
+            raise GroundProblem(f'This folder is already '
+                                f'occupied by \'{name_}\'.')
         else:
             dic = {
                 'given_name': given_name

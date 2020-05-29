@@ -15,18 +15,18 @@ class Segment:
     key defines the group of signals. The group contents may still vary,
     which is why the identifier uniquely defines the particular segment.
 
-    Format: <zulu>___<key>___<identity>
+    Format: ``<zulu>___<key>___<identity>``
 
-    **zulu** represents t0 for the segment. Duration is arbitrary
+    :class:`.Zulu` represents t0 for the segment. Duration is arbitrary
 
-    **key** defines grouping of the contents
+    :class:`.Key` defines grouping of the contents
 
-    **identity** is a unique identifier for the contents
+    :class:`.Identity` is a unique identifier for the contents
 
     Constructor initializes a valid segment, and will throw an exception
     if a valid segment cannot be created based on input parameters.
 
-    The constructor must as minimum have **key** as input::
+    The constructor must as minimum have ``key`` as input::
 
         s = Segment(key='some_key')
         s.key

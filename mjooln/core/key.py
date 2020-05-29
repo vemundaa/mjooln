@@ -14,7 +14,8 @@ class Key(str):
         - Underscore (_)
         - Double underscore (__)
     - The double underscore act as separator for groups in the key
-    - Triple underscore is reserved for separating keys from other strings
+    - Triple underscore is reserved for separating keys from other strings,
+        such as in class :class:`.Segment`
 
     Sample keys::
 

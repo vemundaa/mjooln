@@ -9,24 +9,50 @@ class TextFileError(Exception):
 
 
 class TextFile(File):
+    """
+    Read, write and append simple text files.
+
+    Example::
+
+        f = File('my_file.txt')
+        f.write('Hello world')
+        f.read()
+            'Hello world'
+        f.append(', and you, humans')
+        f.read()
+            'Hello world, and you, humans'
+
+    .. warning:: This class may prove useless and be deprecated
+    """
 
     def write(self, text, crypt_key=None, password=None, **kwargs):
         if not isinstance(text, str):
-            raise TextFileError(f'Input data is not string, instead it is: {type(text)}')
-        super().write(text, mode='wt', crypt_key=crypt_key, password=password)
+            raise TextFileError(f'Input data is not string, '
+                                f'instead it is: {type(text)}')
+        super().write(text, mode='wt',
+                      crypt_key=crypt_key,
+                      password=password)
 
     def append(self, text, crypt_key=None, password=None, **kwargs):
         if not isinstance(text, str):
-            raise TextFileError(f'Input data is not string, instead it is: {type(text)}')
+            raise TextFileError(f'Input data is not string, '
+                                f'instead it is: {type(text)}')
         if self.is_compressed() or self.is_encrypted():
-            written_text = super().read(mode='rt', crypt_key=crypt_key, password=password)
+            written_text = super().read(mode='rt',
+                                        crypt_key=crypt_key,
+                                        password=password)
             text = written_text + text
-            super().write(text, mode='wt', crypt_key=crypt_key, password=password)
+            super().write(text,
+                          mode='wt',
+                          crypt_key=crypt_key,
+                          password=password)
         else:
             super().write(text, mode='at+')
 
     def read(self, crypt_key=None, password=None, **kwargs):
-        return super().read(mode='rt', crypt_key=crypt_key, password=password)
+        return super().read(mode='rt',
+                            crypt_key=crypt_key,
+                            password=password)
 
     def compress(self, delete_original=True):
         # Override super to return text file object
@@ -40,11 +66,13 @@ class TextFile(File):
 
     def encrypt(self, crypt_key, delete_original=True):
         # Override super to return text file object
-        return TextFile(super().encrypt(crypt_key=crypt_key, delete_original=delete_original))
+        return TextFile(super().encrypt(crypt_key=crypt_key,
+                                        delete_original=delete_original))
 
     def decrypt(self, crypt_key, delete_original=True):
         # Override super to return text file object
-        return TextFile(super().decrypt(crypt_key=crypt_key, delete_original=delete_original))
+        return TextFile(super().decrypt(crypt_key=crypt_key,
+                                        delete_original=delete_original))
 
     @classmethod
     def new(cls, path, text):
@@ -57,7 +85,8 @@ class TextFile(File):
 
     @classmethod
     def dev_create_random(cls, path_str, num_chars=1000):
-        text = ''.join(random.choices(string.ascii_uppercase + string.digits + '\n',
+        text = ''.join(random.choices(string.ascii_uppercase +
+                                      string.digits + '\n',
                                       k=num_chars))
         file = cls(path_str)
         if not file.exists():

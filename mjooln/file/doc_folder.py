@@ -12,9 +12,15 @@ class DocFolderError(Exception):
 
 
 class DocFolder(Doc):
-    """ Combination of a folder and a json file containing the attributes of the object.
+    """ Combination of a folder and a json file containing the attributes
+    of the object.
 
     The json file name is '.<folder_name>.json', and is put within the folder.
+
+    .. note:: Meant for inheritance and more advanced functionality,
+        not direct use
+
+    .. warning:: May very well prove useless
     """
 
     @classmethod
@@ -30,7 +36,8 @@ class DocFolder(Doc):
                  **kwargs):
         self._folder = Folder(folder_path)
         self._folder.touch()
-        _file = File(self._file_path(compressed=compressed, encrypted=encrypted))
+        _file = File(self._file_path(compressed=compressed,
+                                     encrypted=encrypted))
         DocFile.__init__(_file, key=key, password=password)
 
     def _file_path(self, compressed, encrypted):
