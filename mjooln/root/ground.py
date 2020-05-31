@@ -9,8 +9,8 @@ class GroundProblem(Exception):
 
 class Ground(Folder):
     """Folder wrapper with the ability to list roots within"""
-    FILE_NAME = f'{File._HIDDEN_STARTSWITH}ground' \
-                f'{File._EXTENSION_SEPARATOR}{File._JSON_EXTENSION}'
+    FILE_NAME = f'{File.HIDDEN_STARTSWITH}ground' \
+                f'{File.EXTENSION_SEPARATOR}{File.JSON_EXTENSION}'
 
     @classmethod
     def search_for(cls):

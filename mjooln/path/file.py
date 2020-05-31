@@ -55,8 +55,8 @@ class File(Path):
         f.close()
 
     .. note:: Using the ``password`` parameter, builds an encryption key by
-        combining it with the builtin class salt. For proper security,
-        generate your
+        combining it with the builtin (i.e. hard coded) class salt.
+        For proper security, generate your
         own salt with :meth:`.Crypt.salt()`. Then use
         :meth:`.Crypt.key_from_password()` to generate a crypt_key
 
@@ -64,14 +64,30 @@ class File(Path):
 
     """
 
-    _JSON_EXTENSION = 'json'
-    _COMPRESSED_EXTENSION = 'gz'
-    _CRYPT_EXTENSION = 'aes'
+    #: Files with this extension will convert from JSON to dict when reading
+    #: the file, and dict to JSON when writing
+    JSON_EXTENSION = 'json'
 
-    _RESERVED_EXTENSIONS = [_COMPRESSED_EXTENSION, _CRYPT_EXTENSION]
+    #: Files with this extension will compress text before writing to file
+    #: and decompress after reading
+    COMPRESSED_EXTENSION = 'gz'
 
-    _HIDDEN_STARTSWITH = '.'
-    _EXTENSION_SEPARATOR = '.'
+    #: Files with this extension will encrypt before writing to file, and
+    #: decrypt after reading. The read/write methods therefore require a
+    #: crypt_key
+    CRYPT_EXTENSION = 'aes'
+
+    #: Extensions that will trigger particular behaviour from read/write
+    #: methods
+    RESERVED_EXTENSIONS = [JSON_EXTENSION,
+                           COMPRESSED_EXTENSION,
+                           CRYPT_EXTENSION]
+
+    #: File names starting with this character will be tagged as hidden
+    HIDDEN_STARTSWITH = '.'
+
+    #: Extension separator. Period
+    EXTENSION_SEPARATOR = '.'
 
     _salt = b'O89ogfFYLGUts3BM1dat4vcQ'
 
@@ -123,12 +139,12 @@ class File(Path):
             elif instance.is_folder():
                 raise FileError(f'Path is existing folder, '
                                 f'not file: {path_str}')
-        instance._hidden = instance.name().startswith(cls._HIDDEN_STARTSWITH)
-        instance._compressed = cls._COMPRESSED_EXTENSION \
+        instance._hidden = instance.name().startswith(cls.HIDDEN_STARTSWITH)
+        instance._compressed = cls.COMPRESSED_EXTENSION \
                                in instance.extensions()
-        instance._encrypted = cls._CRYPT_EXTENSION \
+        instance._encrypted = cls.CRYPT_EXTENSION \
                               in instance.extensions()
-        instance._json = cls._JSON_EXTENSION \
+        instance._json = cls.JSON_EXTENSION \
                          in instance.extensions()
         return instance
 
@@ -138,7 +154,7 @@ class File(Path):
 
         :return: list
         """
-        parts = self.name().split(self._EXTENSION_SEPARATOR)
+        parts = self.name().split(self.EXTENSION_SEPARATOR)
         if self.is_hidden():
             parts = parts[1:]
         return parts
@@ -200,7 +216,7 @@ class File(Path):
         """
         extensions = self.extensions()
         extensions = [x for x in extensions
-                      if x not in self._RESERVED_EXTENSIONS]
+                      if x not in self.RESERVED_EXTENSIONS]
         if len(extensions) == 1:
             return extensions[0]
         elif len(extensions) == 0:
@@ -208,7 +224,7 @@ class File(Path):
         else:
             # TODO: Move this check to instantiation
             raise FileError(f'File has more than one '
-                            f'not reserved ({self._RESERVED_EXTENSIONS}) '
+                            f'not reserved ({self.RESERVED_EXTENSIONS}) '
                             f'extensions ({extensions}). '
                             f'Cannot determine a single extension: {self}')
 
@@ -236,6 +252,7 @@ class File(Path):
         :raise FileError: If file is missing, and ``missing_ok=False``
         :param missing_ok: Indicate if an exception should be raised if the
             file is missing. If True, an exception will not be raised
+        :type missing_ok: bool
         :return: None
         """
         if self.exists():
@@ -269,17 +286,21 @@ class File(Path):
         :param data: Data to write
         :type data: str or bytes
         :param mode: Write mode
+        :type mode: str
         :param crypt_key: Encryption key
+        :type crypt_key: bytes
         :param password: Password (will use class salt)
+        :type password: str
         :param human_readable: JSON only, will write json to file with
             new lines and indentation
+        :type human_readable: bool
         """
         # TODO: Require compression if file is encrypted?
         if self._encrypted:
             crypt_key = self._crypt_key(crypt_key, password)
         elif crypt_key or password:
             raise FileError(f'File does not have crypt extension '
-                            f'({self._CRYPT_EXTENSION}), but a crypt_key '
+                            f'({self.CRYPT_EXTENSION}), but a crypt_key '
                             f'or password was sent as input to write.')
         if self._json:
             data = Doc.dic_to_doc(data, human_readable=human_readable)
@@ -293,7 +314,8 @@ class File(Path):
                                    'implemented. There is an extra read/write '
                                    'from/to disk. In other words, '
                                    'this is a hack.')
-                # TODO: Refactor to write once, but verify zlib/gzip compatibility
+                # TODO: Refactor to write once, but verify zlib/gzip
+                #  compatibility
                 data = self._read(mode='rb')
                 data = Crypt.encrypt(data, crypt_key)
                 self.delete()
@@ -340,7 +362,7 @@ class File(Path):
             crypt_key = self._crypt_key(crypt_key, password)
         elif crypt_key or password:
             raise FileError(f'File does not have crypt extension '
-                            f'({self._CRYPT_EXTENSION}), but a crypt_key '
+                            f'({self.CRYPT_EXTENSION}), but a crypt_key '
                             f'or password was sent as input to write.')
         if self._compressed:
             if self._encrypted:
@@ -475,7 +497,7 @@ class File(Path):
 
         logger.debug(f'Compress file: {self}')
         old_size = self.size()
-        new_file = File(self + '.' + self._COMPRESSED_EXTENSION)
+        new_file = File(self + '.' + self.COMPRESSED_EXTENSION)
         if new_file.exists():
             logger.warning(f'Overwrite existing gz-file: {new_file}')
         with open(self, 'rb') as f_in:
@@ -506,7 +528,7 @@ class File(Path):
             raise FileError(f'Cannot decompress encrypted file: {self}. '
                             f'Decrypt file first.')
         logger.debug(f'Decompress file: {self}')
-        new_file = File(str(self).replace('.' + self._COMPRESSED_EXTENSION, ''))
+        new_file = File(str(self).replace('.' + self.COMPRESSED_EXTENSION, ''))
         if new_file.exists():
             if replace_if_exists:
                 logger.debug('Overwrite existing file: {}'.format(new_file))
@@ -536,7 +558,7 @@ class File(Path):
         if self._encrypted:
             raise FileError(f'File is already encrypted: {self}')
         logger.debug(f'Encrypt file: {self}')
-        encrypted_file = File(self + '.' + self._CRYPT_EXTENSION)
+        encrypted_file = File(self + '.' + self.CRYPT_EXTENSION)
         data = self._read(mode='rb')
         encrypted = Crypt.encrypt(data, crypt_key)
         encrypted_file._write(encrypted, mode='wb')
@@ -559,7 +581,7 @@ class File(Path):
             raise FileError(f'File is not encrypted: {self}')
 
         logger.debug(f'Decrypt file: {self}')
-        decrypted_file = File(self.replace('.' + self._CRYPT_EXTENSION, ''))
+        decrypted_file = File(self.replace('.' + self.CRYPT_EXTENSION, ''))
         data = self._read(mode='rb')
         decrypted = Crypt.decrypt(data, crypt_key)
         decrypted_file._write(decrypted, mode='wb')
