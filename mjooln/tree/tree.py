@@ -1,8 +1,14 @@
 import logging
-from mjooln import Root, Segment, SegmentError, CryptError, Folder, File
+from mjooln import Root, NotRootException, Segment, SegmentError, \
+    CryptError, Folder, File
+
 from mjooln.tree.leaf import Leaf
 
 logger = logging.getLogger(__name__)
+
+
+class NotTreeException(NotRootException):
+    pass
 
 
 class Tree(Root):
@@ -11,53 +17,60 @@ class Tree(Root):
     SPECIES = TREE
 
     @classmethod
-    def is_tree(cls, folder, species=SPECIES):
-        is_root = Root.is_root(folder)
-        if not is_root:
+    def is_tree(cls, folder):
+        try:
+            _ = cls(folder)
+            return True
+        except NotRootException:
             return False
-        else:
-            root = Root(folder)
-            return root._species == species
 
     @classmethod
-    def plant(cls, ground, key,
-              species=SPECIES,
+    def plant(cls, folder, key,
               compress_all=False,
               encrypt_all=False,
+              key_level=None,
+              date_level=0,
+              time_level=0,
               encryption_key=None,
-              key_levels=0,
-              date_levels=0,
-              time_levels=0,
               **kwargs):
-        tree = super(Tree, cls).plant(ground, key,
-                                      species=species,
+
+        tree = super(Tree, cls).plant(folder, key,
                                       compress_all=compress_all,
                                       encrypt_all=encrypt_all,
-                                      key_levels=key_levels,
-                                      date_levels=date_levels,
-                                      time_levels=time_levels,
+                                      key_level=key_level,
+                                      date_level=date_level,
+                                      time_level=time_level,
                                       **kwargs)
         if encryption_key:
-            return cls(ground.append(key), encryption_key=encryption_key)
-        else:
-            return tree
+            tree.add_encryption_key(encryption_key)
+        return tree
 
-    def __init__(self, folder, default=False, encryption_key=None):
+    def __init__(self, folder, encryption_key=None):
         self.compress_all = False
         self.encrypt_all = False
-        self.key_levels = 0
-        self.date_levels = 0
-        self.time_levels = 0
-        super(Tree, self).__init__(folder, default=default)
-        if self.encrypt_all and not encryption_key:
-            raise TreeError('Tree is encrypt_all, and therefore needs an encryption key '
-                            'as input to constructor. Look in Crypt on how to make this.')
+        self.key_level = None
+        self.date_level = 0
+        self.time_level = 0
+        self._encryption_key = None
+        super(Tree, self).__init__(folder)
+        if self._species != self.SPECIES:
+            raise NotTreeException(f'Species mismatch. '
+                                   f'Expected: {self.SPECIES}, '
+                                   f'Found: {self._species}')
+        if encryption_key:
+            self.add_encryption_key(encryption_key)
+
+    def add_encryption_key(self, encryption_key=None):
+        if self.encrypt_all and encryption_key is None:
+            raise TreeError(f'Tree is encrypt_all, but no encryption_key '
+                            f'supplied in constructor. Check Crypt class on '
+                            f'how to make one, or disable encryption')
         self._encryption_key = encryption_key
 
     def branch(self, segment):
-        levels = segment.levels(key_level=self.key_levels,
-                                date_level=self.date_levels,
-                                time_level=self.time_levels)
+        levels = segment.levels(key_level=self.key_level,
+                                date_level=self.date_level,
+                                time_level=self.time_level)
         return self._folder.append(levels)
 
     def grow(self, native_file, segment=None, delete_source=True):
@@ -68,14 +81,17 @@ class Tree(Root):
             raise TreeError(f'Native is not a file: {native_file}')
 
         if segment:
-            new_name = native_file.name().replace(native_file.stub(), str(segment))
+            new_name = native_file.name().replace(native_file.stub(),
+                                                  str(segment))
         else:
             new_name = None
             try:
                 segment = Segment(native_file.stub())
             except SegmentError as se:
-                raise TreeError(f'File name is not a valid segment: {native_file.name()}. '
-                                f'Add segment as parameter to override file name.') from se
+                raise TreeError(f'File name is not a valid '
+                                f'segment: {native_file.name()}. '
+                                f'Add segment as parameter to override '
+                                f'file name.') from se
         folder = self.branch(segment)
         if delete_source:
             file = native_file.move(folder, new_name)
@@ -112,7 +128,8 @@ class Tree(Root):
                 leaf = leaf.decrypt(self._encryption_key)
         except CryptError as ce:
             raise TreeError(f'Invalid or missing encryption key while '
-                            f'attempting reshape of {leaf}. Original error: {ce}')
+                            f'attempting reshape of {leaf}. '
+                            f'Original error: {ce}')
 
         return Leaf.elf(leaf)
 
@@ -175,7 +192,10 @@ class Tree(Root):
             'compression_mismatch': compression_mismatch,
             'encryption_mismatch': encryption_mismatch,
             'empty_folders': empty_folders,
-            'total_weeds': not_leaves + compression_mismatch + encryption_mismatch + empty_folders
+            'total_weeds': not_leaves +
+                           compression_mismatch +
+                           encryption_mismatch +
+                           empty_folders
         }
 
     def total_weeds(self):

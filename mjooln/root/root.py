@@ -1,6 +1,6 @@
 import logging
 
-from mjooln import Dic, Doc, File, Folder, Segment, FileError
+from mjooln import Dic, Doc, File, Folder, Path, Segment, FileError
 
 logger = logging.getLogger(__name__)
 
@@ -13,7 +13,6 @@ class NotRootException(RootError):
     pass
 
 
-# TODO: Rewrite root as file?
 class Root(Doc):
     """
     Combination of a folder and a file that defines a particular spot in
@@ -43,6 +42,27 @@ class Root(Doc):
     # TODO: Add segment and species description. Also needs to be planted
     # TODO: Change key to name?
 
+    ROOT = 'root'
+    SPECIES = ROOT
+
+    _FILE_WILDCARD = f'{File.HIDDEN_STARTSWITH}*' \
+                     f'{File.EXTENSION_SEPARATOR}{File.JSON_EXTENSION}'
+
+    @classmethod
+    def find_all(cls, folder):
+        folder = Folder.elf(folder)
+        paths = folder.glob(cls._FILE_WILDCARD, recursive=True)
+        roots = []
+        for path in paths:
+            if path.is_file():
+                file = File.elf(path)
+                folder = file.folder()
+                if file.stub() == folder.name():
+                    if cls.is_root(folder):
+                        roots.append(Root(folder))
+
+        return roots
+
     @classmethod
     def plant(cls, folder, key, **kwargs):
         root_folder = Folder.elf(folder).append(key)
@@ -51,26 +71,26 @@ class Root(Doc):
                             f'{root_folder}. '
                             f'Empty and remove folder first. '
                             f'Or use a different folder.')
-        root = Dic()
-        root._root = Segment(key=key)
-        root.add(kwargs)
         root_folder.create()
-        file = File.join(root_folder, cls._file_name(root_folder))
-        file.write(root.dic(ignore_private=False))
+        file = cls._get_file(root_folder)
+        file.write(cls._dic(root_folder, **kwargs))
         return cls(root_folder)
 
     @classmethod
     def _file_name(cls, folder):
-        file_name = f'{File.HIDDEN_STARTSWITH}{folder.name()}' \
-                    f'{File.EXTENSION_SEPARATOR}{File.JSON_EXTENSION}'
-        return file_name
+        return cls._FILE_WILDCARD.replace('*', folder.name())
+
+    @classmethod
+    def _get_file(cls, folder):
+        return File.join(folder, cls._file_name(folder))
 
     @classmethod
     def _dic(cls, folder, **kwargs):
-        root = Dic()
-        root._root = Segment(key=folder.name())
-        root.add(kwargs)
-        return root.dic(ignore_private=False)
+        dic = Dic()
+        dic._root = Segment(key=folder.name())
+        dic._species = cls.SPECIES
+        dic.add(kwargs)
+        return dic.dic(ignore_private=False)
 
     @classmethod
     def elf(cls, folder, **kwargs):
@@ -119,6 +139,7 @@ class Root(Doc):
 
     def __init__(self, folder):
         self._root = None
+        self._species = None
         self._folder = Folder.elf(folder)
         if not self._folder.exists():
             raise NotRootException(f'Folder does not exists: {self._folder}')
@@ -143,6 +164,7 @@ class Root(Doc):
                             f'but is: {self._root.key}')
         dic = self.dic()
         dic['_root'] = self._root
+        dic['_species'] = self.SPECIES
         self._file.write(dic)
 
     def read(self):
@@ -155,7 +177,6 @@ class Root(Doc):
         if self._file.stub() != self.key():
             raise NotRootException('File name key mismatch')
 
-
     def key(self):
         return self._root.key
 
@@ -164,6 +185,9 @@ class Root(Doc):
 
     def identity(self):
         return self._root.identity
+
+    def folder(self):
+        return self._folder
 
     def uproot(self, with_force=False, key=None):
         if len(self._folder.list()) > 1:

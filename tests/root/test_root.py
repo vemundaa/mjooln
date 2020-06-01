@@ -83,3 +83,42 @@ def test_elf(tmp_folder):
         Root.elf(folder)
 
 
+def test_uproot(tmp_folder):
+    root = Root.plant(tmp_folder, 'my_root')
+    root.uproot()
+    root = Root.plant(tmp_folder, 'my_root')
+    f = root.folder()
+    file = File.join(f, 'one_file.txt')
+    file.write('Some contents')
+    ff = f.append('one_folder')
+    file2 = File.join(ff, 'two_file.txt')
+    file2.write('Some other contents')
+    with pytest.raises(RootError):
+        root.uproot()
+    with pytest.raises(RootError):
+        root.uproot(with_force=True)
+    root.uproot(with_force=True, key=root.key())
+    Root.plant(tmp_folder, 'my_root')
+    root = Root(tmp_folder.append('my_root'))
+    assert root.key() == 'my_root'
+
+
+def test_find_all(tmp_folder):
+    root_names = [f'root_{x}' for x in range(10)]
+    subfolder1 = tmp_folder.append('sub1')
+    subfolder2 = subfolder1.append('sub2')
+
+    for root_name in root_names:
+        Root.plant(tmp_folder, root_name)
+        Root.plant(subfolder1, root_name)
+        Root.plant(subfolder2, root_name)
+
+    roots = Root.find_all(tmp_folder)
+    assert  3 * len(root_names) == len(roots)
+    roots = Root.find_all((subfolder1))
+    assert 2 * len(root_names) == len(roots)
+    roots = Root.find_all((subfolder2))
+    assert len(root_names) == len(roots)
+
+
+

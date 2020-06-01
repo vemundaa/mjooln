@@ -7,11 +7,11 @@ def ground(tmp_folder):
     yield mj.Ground.settle(tmp_folder)
 
 
-def test_tree(ground):
-    assert len(ground.list('.*')) == 1
-    tree = mj.Tree.plant(ground, 'my_first_tree')
-    assert tree._key == 'my_first_tree'
-    assert len(ground.list()) == 1
+def test_tree(tmp_folder):
+    assert len(tmp_folder.list('*')) == 0
+    tree = mj.Tree.plant(tmp_folder, 'my_first_tree')
+    assert tree.key() == 'my_first_tree'
+    assert len(tmp_folder.list()) == 1
     assert tree._folder.list() == []
     assert tree.leaves() == []
 
