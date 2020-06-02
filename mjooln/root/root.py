@@ -1,6 +1,6 @@
 import logging
 
-from mjooln import Dic, Doc, File, Folder, Path, Segment, FileError
+from mjooln import Dic, Doc, File, Folder, Segment, FileError
 
 logger = logging.getLogger(__name__)
 
