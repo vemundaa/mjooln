@@ -12,6 +12,32 @@ class NotTreeException(NotRootException):
 
 
 class Tree(Root):
+    """
+    Folder structure based on strict :class:`.Segment` file names, and with an
+    autonomous vocabulary.
+
+    Create a new Tree by planting it in any folder, and with a key following
+    the limitations of :class:`Key`::
+
+        folder = Folder.home()
+        key = 'oak'
+        oak = Tree.plant(folder, key)
+
+    Files outside the tree are defined as ``native``, while files in the
+    tree are called ``Leaf``. Leaves are uniquely identified by
+    :class:`.Segment`, which also defines their position in the folder
+    structure underlying the tree.
+
+    Leaves can be grown from a native file by defining a corresponding
+    segment::
+
+        native = File('some_outside_file.csv')
+        segment = Segment(key='my_key')
+        oak.grow(native, segment)
+
+    The file may later be retrieved
+
+    """
 
     TREE = 'tree'
     SPECIES = TREE
@@ -26,6 +52,7 @@ class Tree(Root):
 
     @classmethod
     def plant(cls, folder, key,
+              extension=None,
               compress_all=False,
               encrypt_all=False,
               key_level=None,
@@ -61,6 +88,16 @@ class Tree(Root):
             self.add_encryption_key(encryption_key)
 
     def add_encryption_key(self, encryption_key=None):
+        """
+        Adds encryption key to trees with encryption activated. Encryption key
+        may also be added in constructor. It will not be stored on disk, only
+        in memory.
+
+        :raise TreeError: If encryption is activated, but encryption_key is
+            None
+        :param encryption_key: Encryption key as defined by :class:`.Crypt`
+        :type encryption_key: bytes
+        """
         if self.encrypt_all and encryption_key is None:
             raise TreeError(f'Tree is encrypt_all, but no encryption_key '
                             f'supplied in constructor. Check Crypt class on '
@@ -74,6 +111,7 @@ class Tree(Root):
         return self._folder.append(levels)
 
     def grow(self, native_file, segment=None, delete_source=True):
+        # TODO: Add date parser option (use Zulu.parse) And assume tz
         if not native_file.exists():
             raise TreeError(f'Cannot grow Leaf from non existent '
                             f'path: {native_file}')
@@ -101,6 +139,11 @@ class Tree(Root):
         logger.debug(f'Added leaf: {leaf}')
         leaf = self.shape(leaf)
         return leaf
+
+    def leaf(self, segment):
+        folder = self.branch(segment)
+
+        pass
 
     def leaves(self):
         files = self._folder.files(recursive=True)

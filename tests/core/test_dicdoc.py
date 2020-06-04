@@ -1,4 +1,4 @@
-from mjooln import Dic, Doc, Zulu, Segment
+from mjooln import Dic, Doc, JSON, Zulu, Segment
 
 
 def test_dic():
@@ -63,3 +63,12 @@ def test_doc():
     assert d.b == ddd.b
     assert d.z == ddd.z
     assert str(d.s) == str(seg)
+
+
+def test_json_list():
+    some_list = [
+        {'one': 1}, {'one': 2}, {'two': 2}
+    ]
+    json = JSON.dumps(some_list)
+    dic = JSON.loads(json)
+    assert dic == some_list

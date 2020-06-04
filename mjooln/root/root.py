@@ -48,6 +48,23 @@ class Root(Doc):
     _FILE_WILDCARD = f'{File.HIDDEN_STARTSWITH}*' \
                      f'{File.EXTENSION_SEPARATOR}{File.JSON_EXTENSION}'
 
+
+    @classmethod
+    def is_root(cls, folder):
+        try:
+            _ = cls(folder)
+            return True
+        except NotRootException:
+            return False
+
+    @classmethod
+    def _append_if_root(cls, roots, folder):
+        try:
+            root = cls(folder)
+            roots.append(root)
+        except NotRootException:
+            pass
+
     @classmethod
     def find_all(cls, folder):
         folder = Folder.elf(folder)
@@ -59,7 +76,7 @@ class Root(Doc):
                 folder = file.folder()
                 if file.stub() == folder.name():
                     if cls.is_root(folder):
-                        roots.append(Root(folder))
+                        cls._append_if_root(roots, folder)
 
         return roots
 
@@ -128,14 +145,6 @@ class Root(Doc):
             file.write(cls._dic(folder, **kwargs))
 
         return cls(folder)
-
-    @classmethod
-    def is_root(cls, folder):
-        try:
-            _ = cls(folder)
-            return True
-        except NotRootException:
-            return False
 
     def __init__(self, folder):
         self._root = None

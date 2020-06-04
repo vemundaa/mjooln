@@ -77,10 +77,8 @@ class File(Path):
     #: crypt_key
     CRYPT_EXTENSION = 'aes'
 
-    #: Extensions that will trigger particular behaviour from read/write
-    #: methods
-    RESERVED_EXTENSIONS = [JSON_EXTENSION,
-                           COMPRESSED_EXTENSION,
+    #: Extensions reserved for compression and encryption
+    RESERVED_EXTENSIONS = [COMPRESSED_EXTENSION,
                            CRYPT_EXTENSION]
 
     #: File names starting with this character will be tagged as hidden

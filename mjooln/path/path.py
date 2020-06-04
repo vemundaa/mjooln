@@ -144,6 +144,9 @@ class Path(str):
                             f'for this platform: {path_str}')
         return instance
 
+    def __fspath__(self):
+        return str(self)
+
     def volume(self):
         """ Return path volume
 
