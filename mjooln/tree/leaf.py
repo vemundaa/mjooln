@@ -1,16 +1,15 @@
-# TODO: Make leaf handle the different file types, and also how to load them from the given root
-from mjooln import File, Segment
+from mjooln import File, Atom
 
 
 class LeafError(Exception):
     pass
 
 
-class Leaf(File, Segment):
-    """ Existing file within a tree that following segment naming."""
+class Leaf(File, Atom):
+    """ Existing file within a tree that following atom naming."""
 
     def __init__(self, file):
-        # TODO: Segment as method instead of inheritance?
         File.__init__(self)
-        Segment.__init__(self, self.stub())
-
+        Atom.__init__(self, self.stub())
+        if not self.exists():
+            raise LeafError(f'Leaf path does not exist: {self}')
