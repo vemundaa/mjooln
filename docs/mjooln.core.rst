@@ -20,34 +20,26 @@ mjooln.core.dic\_doc module
    :undoc-members:
    :show-inheritance:
 
-mjooln.core.identity module
----------------------------
-
-.. automodule:: mjooln.core.identity
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-mjooln.core.key module
-----------------------
-
-.. automodule:: mjooln.core.key
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-mjooln.core.segment module
---------------------------
-
-.. automodule:: mjooln.core.segment
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-mjooln.core.zulu module
+mjooln.core.file module
 -----------------------
 
-.. automodule:: mjooln.core.zulu
+.. automodule:: mjooln.core.file
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+mjooln.core.folder module
+-------------------------
+
+.. automodule:: mjooln.core.folder
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+mjooln.core.path module
+-----------------------
+
+.. automodule:: mjooln.core.path
    :members:
    :undoc-members:
    :show-inheritance:

@@ -130,6 +130,27 @@ class File(Path):
         else:
             return Crypt.key_from_password(cls._salt, password)
 
+    @classmethod
+    def make_file_name(cls,
+                       stub,
+                       extension,
+                       is_compressed=False,
+                       is_encrypted=False):
+        if cls.EXTENSION_SEPARATOR in stub:
+            raise FileError(f'Cannot add stub with extension '
+                            f'separator in it: {stub}. '
+                            f'Need a clean string for this')
+        if cls.EXTENSION_SEPARATOR in extension:
+            raise FileError(f'Cannot add extension with extension '
+                            f'separator in it: {extension}. '
+                            f'Need a clean string for this')
+        new_names = [stub, extension]
+        if is_compressed:
+            new_names += [cls.COMPRESSED_EXTENSION]
+        if is_encrypted:
+            new_names += [cls.CRYPT_EXTENSION]
+        return cls.EXTENSION_SEPARATOR.join(new_names)
+
     def __new__(cls, path_str, is_binary=False, *args, **kwargs):
         # TODO: Raise exception if reserved extensions are used inappropriately
         instance = Path.__new__(cls, path_str)

@@ -137,6 +137,7 @@ def test_reshape_encrypted(tmp_folder, tmp_files):
 
 
 def test_prune(error, tmp_folder, several_atom_files):
+    # TODO: Add negative levels, and None, and 0 to double check.
     num_files = len(several_atom_files)
     atom = mj.Atom(several_atom_files[0].stub())
     if not len(atom.key.parts()) > 1:
@@ -144,7 +145,7 @@ def test_prune(error, tmp_folder, several_atom_files):
     assert len(tmp_folder.list()) == num_files
     tree = mj.Tree.plant(tmp_folder, 'my_second_tree')
     for file in several_atom_files:
-        tree.grow(file, delete_source=True)
+        tree.grow(file, delete_native=True)
 
     # Test if source has been deleted
     assert len(tmp_folder.list()) == 1
@@ -197,10 +198,11 @@ def test_weed(tmp_folder, several_tmp_files, several_atoms):
     tree = mj.Tree.plant(tmp_folder, 'my_fourth_tree',
                          encryption_key=mj.Crypt.generate_key(),
                          key_level=1, date_level=1, time_level=1)
-    for file, segment in zip(several_tmp_files, several_atoms):
-        tree.grow(file, atom=segment, delete_source=False)
+    for file, atom in zip(several_tmp_files, several_atoms):
+        tree.grow(file, atom=atom, delete_native=False)
 
-    # Check that the source files are still in root folder, and that there is a tree folder there
+    # Check that the source files are still in root folder, and that there
+    # is a tree folder there
     assert len(tmp_folder.list()) == num_files + 1
 
     assert tree.total_weeds() == 0
@@ -218,7 +220,7 @@ def test_weed(tmp_folder, several_tmp_files, several_atoms):
     assert weeds['not_leaves'] == 1
     assert weeds['empty_folders'] == 1
 
-    tree.prune()
+    tree.prune(delete_not_leaf=True)
     assert tree.total_weeds() == 0
 
     leaf = tree.leaves()[0]

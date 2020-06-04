@@ -28,8 +28,7 @@ class Root(Doc):
     1. Folder path is ``../julian``
     2. Folder contains a JSON file with name ``.julian.json``
     3. JSON file contains a dictionary, where one top level key is ``_root``,
-       and the contents of the key is of type :class:`.Segment`, where
-       ``Segment.key = 'julian'``
+       containing a :class:`.Root.RootDic` with ``Atom.key = 'julian'``
 
     This triplet defines a Root as valid independent of file system, database
     entry or configuration file entry, allowing it to be used as a standalone
@@ -37,18 +36,26 @@ class Root(Doc):
 
     The Root class also stores all attributes, except private, in the JSON
     file. The key ``_root`` is reserved for class private attributes.
-
     """
-    # TODO: Add segment and species description. Also needs to be planted
+    # TODO: Add atom and species description. Also needs to be planted
     # TODO: Change key to name?
 
-    ROOT = 'Root'
+    #: Root class identifier
+    ROOT = 'root'
+
+    #: Current class species (this is Root)
     SPECIES = ROOT
 
     _FILE_WILDCARD = f'{File.HIDDEN_STARTSWITH}*' \
                      f'{File.EXTENSION_SEPARATOR}{File.JSON_EXTENSION}'
 
     class RootDic(Dic):
+        """
+        Container for root specific variables:
+
+        - :class:`.Atom`
+        - ``species``
+        """
 
         @classmethod
         def new(cls, key, species):
@@ -61,6 +68,14 @@ class Root(Doc):
 
     @classmethod
     def is_root(cls, folder):
+        """
+        Checks if folder is a valid root
+
+        :param folder: Folder to check
+        :type folder: Folder
+        :return: True if folder is root, False if not
+        :rtype: bool
+        """
         try:
             _ = cls(folder)
             return True
@@ -77,6 +92,14 @@ class Root(Doc):
 
     @classmethod
     def find_all(cls, folder):
+        """
+        Find all roots in folder
+
+        :param folder: Folder to search
+        :type folder: Folder
+        :return: List of roots found in folder
+        :rtype: [Root]
+        """
         folder = Folder.elf(folder)
         paths = folder.glob(cls._FILE_WILDCARD, recursive=True)
         roots = []
@@ -92,6 +115,17 @@ class Root(Doc):
 
     @classmethod
     def plant(cls, folder, key, **kwargs):
+        """
+        Create a new root in folder, with given key and kwargs
+
+        :param folder: Folder where the root will be created
+        :type folder: Folder
+        :param key: Root key, following :class:`.Key` limitations
+        :type key: Key
+        :param kwargs: Attributes to add to root
+        :return: Created root
+        :rtype: Root
+        """
         root_folder = Folder.elf(folder).append(key)
         if root_folder.exists():
             raise RootError(f'Cannot plant root in existing folder: '
@@ -120,6 +154,19 @@ class Root(Doc):
 
     @classmethod
     def elf(cls, folder, **kwargs):
+        """
+        Converts an existing folder to root, tolerating missing file but not
+        invalid key. If a folder already is a valid root, it will be returned
+        as root. The folder name must be a valid :class:`.Key`
+
+        :raise RootError: If file already exists, but does not have the right
+            key, or if it has an invalid format
+        :param folder: Folder to convert to root
+        :type folder: Folder
+        :param kwargs: Attributes to add to root file
+        :return: New or existing root
+        :rtype: Root
+        """
         if cls.is_root(folder):
             return cls(folder)
 
@@ -134,8 +181,8 @@ class Root(Doc):
                     if key == folder.name():
                         raise RootError(f'This seems to be a valid root, but '
                                         f'is_root said otherwise. Contact '
-                                        f'the incompetent developer of this '
-                                        f'module.')
+                                        f'the rather incompetent developer of '
+                                        f'this module.')
                     else:
                         raise RootError(f'Root file already exists, but has '
                                         f'the wrong key. '
@@ -143,7 +190,7 @@ class Root(Doc):
                                         f'Found: key={key}')
                 else:
                     raise RootError(f'Root file already exists, but has '
-                                    f'invalid format. Should be segment, but '
+                                    f'invalid format. Should be atom, but '
                                     f'contents is instead: {dic}')
             except FileError as fe:
                 raise RootError(f'Root file exists, does not seem to be a '
@@ -173,6 +220,9 @@ class Root(Doc):
                                    f'file={self._file}')
 
     def write(self):
+        """
+        Write all root attributes to file
+        """
         self.verify()
         if self.key() != self._folder.name():
             raise RootError(f'Cannot write the wrong root key to root file. '
@@ -184,41 +234,89 @@ class Root(Doc):
         self._file.write(dic)
 
     def read(self):
+        """
+        Read all root attributes from file
+        """
         self._add_dic(self._file.read(), ignore_private=False)
         self._root = self.RootDic(**self._root)
         self.verify()
 
     def verify(self):
+        """
+        Verify that root is valid
+
+        :raise NotRootException: If root is not valid
+        """
         if self._folder.name() != self.key():
             raise NotRootException('Folder key mismatch')
         if self._file.stub() != self.key():
             raise NotRootException('File name key mismatch')
 
     def key(self):
+        """
+        Get root key
+
+        :return: Root key
+        :rtype: Key
+        """
         return self._root.atom.key
 
     def zulu(self):
+        """
+        Get root zulu
+
+        :return: Root zulu
+        :rtype: Zulu
+        """
         return self._root.atom.zulu
 
     def identity(self):
+        """
+        Get root identity
+
+        :return: Root identity
+        :rtype: Identity
+        """
         return self._root.atom.identity
 
     def species(self):
+        """
+        Get root species
+
+        :return: Root species
+        :rtype: str
+        """
         return self._root.species
 
     def folder(self):
+        """
+        Get root folder
+
+        :return: Root folder
+        :rtype: Folder
+        """
         return self._folder
 
     def uproot(self, with_force=False, key=None):
+        """
+        Remove root. If root has contents, use ``with_force=True`` and
+        ``key=<root key>`` to force this
+
+        .. warning:: Forcing uproot will remove all contents recursively
+
+        :param with_force: Flags forced uproot, which will remove all files
+            and folders recursively
+        :param key: Add key to verify forced uproot
+        """
         if len(self._folder.list()) > 1:
             if with_force:
-                if key == self._root.key:
+                if key == self.key():
                     self._folder.empty()
                 else:
                     raise RootError(f'Root folder ({self}) is not empty. '
                                     f'Enter root key as input to '
                                     f'uproot with force: '
-                                    f'key={self._root.key}')
+                                    f'key={self.key()}')
             else:
                 raise RootError(f'Root folder ({self}) is not empty. '
                                 f'Uproot with force to empty it: '

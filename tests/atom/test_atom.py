@@ -22,11 +22,11 @@ def test_segment():
     with pytest.raises(AtomError):
         Atom(zulu=z, identity=i)
 
-    with pytest.raises(ValueError):
+    with pytest.raises(AtomError):
         Atom(f'{z}{k}{Atom._SEPARATOR}{i}')
 
-    with pytest.raises(ValueError):
+    with pytest.raises(AtomError):
         Atom(f'{z}{Atom._SEPARATOR}{k}{i}')
 
-    with pytest.raises(ValueError):
+    with pytest.raises(AtomError):
         Atom('This is not a segment')

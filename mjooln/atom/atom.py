@@ -59,6 +59,13 @@ class Atom:
                 return True
         return False
 
+    @classmethod
+    def elf(cls, *args, **kwargs):
+        if len(args) == 1 and kwargs is None and isinstance(args[0], Atom):
+            return args[0]
+        else:
+            return cls(*args, **kwargs)
+
     def __init__(self, *args, **kwargs):
         """ Initializes a valid atom
 
@@ -68,7 +75,10 @@ class Atom:
         identity are created if not supplied.
         """
         if len(args) == 1:
-            z, k, i = args[0].split(self._SEPARATOR)
+            try:
+                z, k, i = args[0].split(self._SEPARATOR)
+            except ValueError as ve:
+                raise AtomError(f'Invalid input: {args[0]}')
             zulu = Zulu.elf(z)
             key = Key.elf(k)
             identity = Identity.elf(i)
@@ -92,7 +102,7 @@ class Atom:
                 identity = Identity()
         else:
             raise AtomError(f'Invalid arguments: {args}'
-                               f'And/or invalid keyword arguments: {kwargs}')
+                            f'And/or invalid keyword arguments: {kwargs}')
 
         self.zulu = zulu
         self.key = key
@@ -102,7 +112,7 @@ class Atom:
         return self._SEPARATOR.join([str(self.zulu), self.key, self.identity])
 
     def custom_separator(self, separator):
-        """ Segment string with custom separator
+        """ Atom string with custom separator
 
         :param separator: Custom separator
         :return: str
@@ -113,7 +123,7 @@ class Atom:
                key_level=None,
                date_level=None,
                time_level=0):
-        """ Create list of levels representing the Segment
+        """ Create list of levels representing the Atom
 
         Intended usage is for creating folder paths for atom files
 

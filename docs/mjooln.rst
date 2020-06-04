@@ -6,10 +6,8 @@ Subpackages
 
 .. toctree::
 
+   mjooln.atom
    mjooln.core
-   mjooln.file
-   mjooln.path
-   mjooln.root
    mjooln.tree
 
 Module contents

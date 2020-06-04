@@ -12,6 +12,14 @@ mjooln.tree.leaf module
    :undoc-members:
    :show-inheritance:
 
+mjooln.tree.root module
+-----------------------
+
+.. automodule:: mjooln.tree.root
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 mjooln.tree.tree module
 -----------------------
 
