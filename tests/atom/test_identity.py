@@ -17,8 +17,8 @@ def test_identity():
     assert Identity.find_all(idstr) == [id1, id2, id3]
     with pytest.raises(IdentityError):
         id1 = Identity.find_one('No id here')
-    assert Identity.isin(f'One id {id1} here')
-    assert not Identity.isin('No id here')
+    assert Identity.is_in(f'One id {id1} here')
+    assert not Identity.is_in('No id here')
 
 
 #
