@@ -1,5 +1,5 @@
 import pytest
-from mjooln.root.root import Root, RootError, NotRootException, File
+from mjooln.tree.root import Root, RootError, NotRootException, File
 
 
 def test_plant(tmp_folder):

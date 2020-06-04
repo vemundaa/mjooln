@@ -1,10 +1,14 @@
 import logging
-from mjooln import Root, NotRootException, Segment, SegmentError, \
-    CryptError, Folder, File
+from mjooln import CryptError, Folder, File, Atom, AtomError
 
+from mjooln.tree.root import Root, RootError, NotRootException
 from mjooln.tree.leaf import Leaf
 
 logger = logging.getLogger(__name__)
+
+
+class TreeError(Exception):
+    pass
 
 
 class NotTreeException(NotRootException):
@@ -13,7 +17,7 @@ class NotTreeException(NotRootException):
 
 class Tree(Root):
     """
-    Folder structure based on strict :class:`.Segment` file names, and with an
+    Folder structure based on strict :class:`.Atom` file names, and with an
     autonomous vocabulary.
 
     Create a new Tree by planting it in any folder, and with a key following
@@ -25,15 +29,15 @@ class Tree(Root):
 
     Files outside the tree are defined as ``native``, while files in the
     tree are called ``Leaf``. Leaves are uniquely identified by
-    :class:`.Segment`, which also defines their position in the folder
+    :class:`.Atom`, which also defines their position in the folder
     structure underlying the tree.
 
     Leaves can be grown from a native file by defining a corresponding
     segment::
 
         native = File('some_outside_file.csv')
-        segment = Segment(key='my_key')
-        oak.grow(native, segment)
+        atom = Atom(key='my_key')
+        oak.grow(native, atom)
 
     The file may later be retrieved
 
@@ -80,10 +84,10 @@ class Tree(Root):
         self.time_level = 0
         self._encryption_key = None
         super(Tree, self).__init__(folder)
-        if self._species != self.SPECIES:
+        if self.species() != self.SPECIES:
             raise NotTreeException(f'Species mismatch. '
                                    f'Expected: {self.SPECIES}, '
-                                   f'Found: {self._species}')
+                                   f'Found: {self.species()}')
         if encryption_key:
             self.add_encryption_key(encryption_key)
 
@@ -104,13 +108,13 @@ class Tree(Root):
                             f'how to make one, or disable encryption')
         self._encryption_key = encryption_key
 
-    def branch(self, segment):
-        levels = segment.levels(key_level=self.key_level,
-                                date_level=self.date_level,
-                                time_level=self.time_level)
+    def branch(self, atom):
+        levels = atom.levels(key_level=self.key_level,
+                             date_level=self.date_level,
+                             time_level=self.time_level)
         return self._folder.append(levels)
 
-    def grow(self, native_file, segment=None, delete_source=True):
+    def grow(self, native_file, atom=None, delete_source=True):
         # TODO: Add date parser option (use Zulu.parse) And assume tz
         if not native_file.exists():
             raise TreeError(f'Cannot grow Leaf from non existent '
@@ -118,19 +122,19 @@ class Tree(Root):
         if not native_file.is_file():
             raise TreeError(f'Native is not a file: {native_file}')
 
-        if segment:
+        if atom:
             new_name = native_file.name().replace(native_file.stub(),
-                                                  str(segment))
+                                                  str(atom))
         else:
             new_name = None
             try:
-                segment = Segment(native_file.stub())
-            except SegmentError as se:
+                atom = Atom(native_file.stub())
+            except AtomError as se:
                 raise TreeError(f'File name is not a valid '
-                                f'segment: {native_file.name()}. '
-                                f'Add segment as parameter to override '
+                                f'atom: {native_file.name()}. '
+                                f'Add atom as parameter to override '
                                 f'file name.') from se
-        folder = self.branch(segment)
+        folder = self.branch(atom)
         if delete_source:
             file = native_file.move(folder, new_name)
         else:
@@ -140,8 +144,8 @@ class Tree(Root):
         leaf = self.shape(leaf)
         return leaf
 
-    def leaf(self, segment):
-        folder = self.branch(segment)
+    def leaf(self, atom):
+        folder = self.branch(atom)
 
         pass
 
@@ -244,7 +248,3 @@ class Tree(Root):
     def total_weeds(self):
         weeds = self.weeds()
         return weeds['total_weeds']
-
-
-class TreeError(Exception):
-    pass

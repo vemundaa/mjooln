@@ -2,7 +2,7 @@ import os
 import glob
 import logging
 import socket
-from mjooln.core.zulu import Zulu
+from mjooln.atom.zulu import Zulu
 import psutil
 from sys import platform
 

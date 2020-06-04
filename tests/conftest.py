@@ -65,16 +65,16 @@ def several_tmp_files(tmp_folder):
 
 
 @pytest.fixture()
-def several_segments():
+def several_atoms():
     zulus = mj.Zulu.range(n=30)
-    return [mj.Segment(key='test_files__lots', zulu=x) for x in zulus]
+    return [mj.Atom(key='test_files__lots', zulu=x) for x in zulus]
 
 
 @pytest.fixture()
-def several_segment_files(tmp_folder):
+def several_atom_files(tmp_folder):
     zulus = mj.Zulu.range(n=30)
-    segments = [mj.Segment(key='test_files__lots', zulu=x) for x in zulus]
-    files = [mj.File.join(tmp_folder, f'{s}.txt') for s in segments]
+    atom = [mj.Atom(key='test_files__lots', zulu=x) for x in zulus]
+    files = [mj.File.join(tmp_folder, f'{s}.txt') for s in atom]
     dev_create_test_files(files)
     yield files
     for file in files:

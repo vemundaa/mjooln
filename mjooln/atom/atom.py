@@ -1,50 +1,53 @@
 import logging
 
-from mjooln.core.zulu import Zulu
-from mjooln.core.key import Key
-from mjooln.core.identity import Identity
+from mjooln.atom.zulu import Zulu
+from mjooln.atom.key import Key
+from mjooln.atom.identity import Identity
 
 logger = logging.getLogger(__name__)
 
 
-class Segment:
-    """ Unique identifier intended for time series segments
+class AtomError(Exception):
+    pass
 
-    A segment is defined as an arbitrary number of signals, and undefined
-    duration. Thus, the timestamp (zulu) defines start time (t0), and
-    key defines the group of signals. The group contents may still vary,
-    which is why the identifier uniquely defines the particular segment.
+
+class Atom:
+    """ Unique identifier intended for objects and data sets alike
+
+    The timestamp (zulu) defines start time (t0) of data set, or the time of
+    creation. Key defines the grouping, while identity is a unique UUID
 
     Format: ``<zulu>___<key>___<identity>``
 
-    :class:`.Zulu` represents t0 for the segment. Duration is arbitrary
+    :class:`.Zulu` represents t0 or creation time
 
     :class:`.Key` defines grouping of the contents
 
     :class:`.Identity` is a unique identifier for the contents
 
-    Constructor initializes a valid segment, and will throw an exception
-    if a valid segment cannot be created based on input parameters.
+    Constructor initializes a valid atom, and will throw an exception
+    if a valid atom cannot be created based on input parameters.
 
     The constructor must as minimum have ``key`` as input::
 
-        s = Segment(key='some_key')
-        s.key
+        a = Atom(key='some_key')
+        a.key
             'some_key'
-        s.zulu
+        a.zulu
             Zulu(2020, 5, 22, 13, 13, 18, 179169, tzinfo=<UTC>)
-        s.identity
+        a.identity
             '060AFBD5_D865_4974_8E37_FDD5C55E7CD8'
-        str(s)
+        str(a)
             '20200522T131318u179169Z___some_key___060AFBD5_D865_4974_8E37_FDD5C55E7CD8'
 
     """
 
     _SEPARATOR = '___'
 
+
     @classmethod
     def check(cls, dic):
-        """ Check if the input dictionary represents a valid segment
+        """ Check if the input dictionary represents a valid atom
 
         :param dic: Input dictionary
         :type dic: dict
@@ -57,9 +60,9 @@ class Segment:
         return False
 
     def __init__(self, *args, **kwargs):
-        """ Initializes a valid segment
+        """ Initializes a valid atom
 
-        :param args: One argument is treated as a segment string and parsed.
+        :param args: One argument is treated as a atom string and parsed.
         Three arguments is treated as (zulu, key, identity), in that order.
         :param kwargs: key, zulu, identity. key is required, while zulu and
         identity are created if not supplied.
@@ -72,11 +75,11 @@ class Segment:
         elif len(args) == 3:
             zulu, key, identity = args
             if not isinstance(zulu, Zulu):
-                raise SegmentError(f'\'{zulu}\' is not Zulu object')
+                raise AtomError(f'\'{zulu}\' is not Zulu object')
             if not isinstance(key, Key):
-                raise SegmentError(f'\'{key}\' is not Key object')
+                raise AtomError(f'\'{key}\' is not Key object')
             if not isinstance(identity, Identity):
-                raise SegmentError(f'\'{identity}\' is not Identity Object')
+                raise AtomError(f'\'{identity}\' is not Identity Object')
         elif len(kwargs) >= 1 and 'key' in kwargs:
             key = Key.elf(kwargs['key'])
             if 'zulu' in kwargs:
@@ -88,7 +91,7 @@ class Segment:
             else:
                 identity = Identity()
         else:
-            raise SegmentError(f'Invalid arguments: {args}'
+            raise AtomError(f'Invalid arguments: {args}'
                                f'And/or invalid keyword arguments: {kwargs}')
 
         self.zulu = zulu
@@ -112,7 +115,7 @@ class Segment:
                time_level=0):
         """ Create list of levels representing the Segment
 
-        Intended usage is for creating folder paths for segment files
+        Intended usage is for creating folder paths for atom files
 
         **None**: Full value
 
@@ -124,18 +127,18 @@ class Segment:
 
         Example::
 
-            s = Segment(key='this__is__a_key')
-            str(s)
+            a = Atom(key='this__is__a_key')
+            str(a)
                 '20200522T181551u626184Z___this__is__a_key___F45A9C74_DC5D_48A6_9468_FC7E343EC554'
-            s.levels()
+            a.levels()
                 ['this__is__a_key', '20200522']
-            s.levels(None, None, None)
+            a.levels(None, None, None)
                 ['this__is__a_key', '20200522', '181551']
-            s.levels(0, 0, 0)
+            a.levels(0, 0, 0)
                 []
-            s.levels(3, 2, 1)
+            a.levels(3, 2, 1)
                 ['this', 'is', 'a_key', '2020', '05', '18']
-            s.levels(-3, -2, -1)
+            a.levels(-3, -2, -1)
                 ['this__is__a_key', '202005', '18']
 
         :param key_level: Key levels
@@ -168,7 +171,3 @@ class Segment:
             times = make([zs.hour, zs.minute, zs.second], time_level)
 
         return keys + dates + times
-
-
-class SegmentError(Exception):
-    pass

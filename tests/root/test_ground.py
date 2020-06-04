@@ -3,7 +3,7 @@ import mjooln as mj
 
 
 def test_ground(tmp_folder):
-    ground = mj.Ground.settle(tmp_folder)
+    ground = mj.Field.settle(tmp_folder)
     assert ground.list() == []
     assert ground.roots() == []
     one_root = mj.Root.plant(ground, 'one_root')
@@ -22,5 +22,5 @@ def test_ground(tmp_folder):
     one_root = ground.root('one_root')
     assert one_root.dic() == dic1
 
-    with pytest.raises(mj.GroundProblem):
-        mj.Ground.settle(tmp_folder)
+    with pytest.raises(mj.FieldError):
+        mj.Field.settle(tmp_folder)

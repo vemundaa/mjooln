@@ -1,6 +1,6 @@
 import logging
 
-from mjooln import Dic, Doc, File, Folder, Segment, FileError
+from mjooln import Dic, Doc, File, Folder, Atom, FileError
 
 logger = logging.getLogger(__name__)
 
@@ -42,11 +42,21 @@ class Root(Doc):
     # TODO: Add segment and species description. Also needs to be planted
     # TODO: Change key to name?
 
-    ROOT = 'root'
+    ROOT = 'Root'
     SPECIES = ROOT
 
     _FILE_WILDCARD = f'{File.HIDDEN_STARTSWITH}*' \
                      f'{File.EXTENSION_SEPARATOR}{File.JSON_EXTENSION}'
+
+    class RootDic(Dic):
+
+        @classmethod
+        def new(cls, key, species):
+            return cls(Atom(key=key), species)
+
+        def __init__(self, atom, species):
+            self.atom = atom
+            self.species = species
 
 
     @classmethod
@@ -87,7 +97,7 @@ class Root(Doc):
             raise RootError(f'Cannot plant root in existing folder: '
                             f'{root_folder}. '
                             f'Empty and remove folder first. '
-                            f'Or use a different folder.')
+                            f'Or use a different key.')
         root_folder.create()
         file = cls._get_file(root_folder)
         file.write(cls._dic(root_folder, **kwargs))
@@ -104,8 +114,7 @@ class Root(Doc):
     @classmethod
     def _dic(cls, folder, **kwargs):
         dic = Dic()
-        dic._root = Segment(key=folder.name())
-        dic._species = cls.SPECIES
+        dic._root = cls.RootDic.new(folder.name(), cls.SPECIES)
         dic.add(kwargs)
         return dic.dic(ignore_private=False)
 
@@ -120,7 +129,7 @@ class Root(Doc):
         if file.exists():
             try:
                 dic = file.read()
-                if isinstance(dic['_root'], Segment):
+                if isinstance(dic['_root'], Atom):
                     key = dic['_root'].key
                     if key == folder.name():
                         raise RootError(f'This seems to be a valid root, but '
@@ -148,7 +157,6 @@ class Root(Doc):
 
     def __init__(self, folder):
         self._root = None
-        self._species = None
         self._folder = Folder.elf(folder)
         if not self._folder.exists():
             raise NotRootException(f'Folder does not exists: {self._folder}')
@@ -158,7 +166,7 @@ class Root(Doc):
             raise NotRootException(f'Description file does '
                                    f'not exist: {self._file}')
         self.read()
-        if self._root.key != self._folder.name():
+        if self.key() != self._folder.name():
             raise NotRootException(f'Key/folder mismatch. '
                                    f'key={self._root.key}, '
                                    f'folder={self._folder}, '
@@ -166,18 +174,18 @@ class Root(Doc):
 
     def write(self):
         self.verify()
-        if self._root.key != self._folder.name():
+        if self.key() != self._folder.name():
             raise RootError(f'Cannot write the wrong root key to root file. '
                             f'Should be same as folder name: '
                             f'{self._folder.name()}, '
-                            f'but is: {self._root.key}')
+                            f'but is: {self.key()}')
         dic = self.dic()
         dic['_root'] = self._root
-        dic['_species'] = self.SPECIES
         self._file.write(dic)
 
     def read(self):
         self._add_dic(self._file.read(), ignore_private=False)
+        self._root = self.RootDic(**self._root)
         self.verify()
 
     def verify(self):
@@ -187,13 +195,16 @@ class Root(Doc):
             raise NotRootException('File name key mismatch')
 
     def key(self):
-        return self._root.key
+        return self._root.atom.key
 
     def zulu(self):
-        return self._root.zulu
+        return self._root.atom.zulu
 
     def identity(self):
-        return self._root.identity
+        return self._root.atom.identity
+
+    def species(self):
+        return self._root.species
 
     def folder(self):
         return self._folder

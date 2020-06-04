@@ -6,10 +6,12 @@ import hashlib
 
 from mjooln.core.crypt import Crypt
 from mjooln.core.dic_doc import Doc
-from mjooln.path.path import Path
-from mjooln.path.folder import Folder
+from mjooln.core.path import Path
+from mjooln.core.folder import Folder
 
 logger = logging.getLogger(__name__)
+
+# TODO: Add yaml files
 
 
 class File(Path):

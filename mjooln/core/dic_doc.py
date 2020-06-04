@@ -1,8 +1,10 @@
 import json
 import simplejson
 
-from mjooln.core.zulu import Zulu, ZuluError
-from mjooln.core.segment import Segment
+from mjooln.atom.zulu import Zulu, ZuluError
+from mjooln.atom.atom import Atom
+
+# TODO: Add YAML handling with pyyaml, yaml.dump(data, ff, allow_unicode=True)
 
 
 # TODO: Add custom class handling, including reserved words
@@ -139,8 +141,8 @@ class Dic:
                 dic[key] = cls._parse_if_iso(item)
             elif isinstance(item, dict):
                 dic[key] = cls._from_strings(item)
-                if Segment.check(dic[key]):
-                    dic[key] = Segment(**dic[key])
+                if Atom.check(dic[key]):
+                    dic[key] = Atom(**dic[key])
             elif isinstance(item, Dic):
                 dic[key] = cls._from_strings(item.dic())
         return dic
@@ -150,7 +152,7 @@ class Dic:
         for key, item in dic.items():
             if isinstance(item, Zulu):
                 dic[key] = item.iso()
-            elif isinstance(item, Segment):
+            elif isinstance(item, Atom):
                 dic[key] = cls._to_strings(vars(item))
             elif isinstance(item, dict):
                 dic[key] = cls._to_strings(item)
@@ -173,8 +175,8 @@ class Doc(Dic):
       is converted to JSON
     - ISO 8601 strings that are time zone aware with UTC, will be converted to
       Zulu objects after JSON document has been converted to a dictionary
-    - Elements that are dictionaries with key names corresponding to Segment
-      (key, zulu, identity), will be recognized and converted back to a Segment
+    - Elements that are dictionaries with key names corresponding to Atom
+      (key, zulu, identity), will be recognized and converted back to an Atom
       object after JSON document has been converted to a dictionary
     """
 

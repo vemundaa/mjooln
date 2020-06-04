@@ -1,0 +1,32 @@
+import pytest
+
+from mjooln import Atom, AtomError, Zulu, Key, Identity
+
+
+def test_segment():
+    k = Key('some_key')
+    z = Zulu()
+    i = Identity()
+    s = Atom(z, k, i)
+    assert str(s) == f'{z}{Atom._SEPARATOR}{k}{Atom._SEPARATOR}{i}'
+    assert s.key == k
+    assert s.zulu == z
+    assert s.identity == i
+    ss = Atom(str(s))
+    assert str(ss) == str(s)
+
+    with pytest.raises(AtomError):
+        Atom()
+    with pytest.raises(AtomError):
+        Atom(zulu=z)
+    with pytest.raises(AtomError):
+        Atom(zulu=z, identity=i)
+
+    with pytest.raises(ValueError):
+        Atom(f'{z}{k}{Atom._SEPARATOR}{i}')
+
+    with pytest.raises(ValueError):
+        Atom(f'{z}{Atom._SEPARATOR}{k}{i}')
+
+    with pytest.raises(ValueError):
+        Atom('This is not a segment')

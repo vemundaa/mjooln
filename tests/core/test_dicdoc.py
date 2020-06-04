@@ -1,4 +1,4 @@
-from mjooln import Dic, Doc, JSON, Zulu, Segment
+from mjooln import Dic, Doc, JSON, Zulu, Atom
 
 
 def test_dic():
@@ -53,8 +53,8 @@ def test_doc():
     d = Doc()
     d.a = 5
     d.b = 'five'
-    seg = Segment(key='dummy')
-    d.s = seg
+    atom = Atom(key='dummy')
+    d.s = atom
     d.z = Zulu()
     dd = d.doc()
     ddd = Doc()
@@ -62,7 +62,7 @@ def test_doc():
     assert d.a == ddd.a
     assert d.b == ddd.b
     assert d.z == ddd.z
-    assert str(d.s) == str(seg)
+    assert str(d.s) == str(atom)
 
 
 def test_json_list():
