@@ -22,7 +22,7 @@ author = 'Vemund Halmø Aarstrand'
 
 # The full version, including alpha/beta/rc tags
 release = 'alpha 0.36'
-
+master_doc = 'index'
 
 # -- General configuration ---------------------------------------------------
 
