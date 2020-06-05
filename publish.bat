@@ -8,6 +8,7 @@ echo "Push latest to github"
 read ok
 echo "Create release on github"
 read ok
-echo "Run setup py"
-read ok
-echo "Run twine"
+echo "Running setup.py"
+python setup.py sdist
+echo "Running twine"
+twine upload dist/*.*
