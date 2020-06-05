@@ -1,3 +1,6 @@
+setuptools
+Sphinx
+sphinx-rtd-theme
 pytest
 python-dateutil
 pytz

@@ -1,23 +1,23 @@
 from distutils.core import setup
 
-with open('README') as f:
+with open('README.md') as f:
     long_description = f.read()
 
 setup(
     name='mjooln',
-    packages=['mjooln', 'mjooln.core', 'mjooln.path', 'mjooln.file',
-              'mjooln.root', 'mjooln.tree'],
-    version='0.3.6',
-    license='BSD',
+    packages=['mjooln', 'mjooln.atom', 'mjooln.core', 'mjooln.tree'],
+    version='0.3.7',
+    license='MIT',
     description='Environmentally Friendly File Handling',
     long_description=long_description,
     long_description_content_type='text/markdown',
     author='Vemund Halmø Aarstrand',
     author_email='vemundaa@gmail.com',
-    url='https://github.com/vemundaa/mjooln',
-    download_url='https://github.com/vemundaa/mjooln/archive/v_036.tar.gz',
-    keywords=['json', 'path', 'file', 'folder', 'file handling',
-              'encryption', 'compression', 'aes', 'gzip'],
+    # url='https://github.com/vemundaa/mjooln',
+    url='https://mjooln.readthedocs.io/en/latest/',
+    download_url='https://github.com/vemundaa/mjooln/archive/v_037.tar.gz',
+    keywords=['JSON', 'PATH', 'FILE', 'FOLDER', 'FILE HANDLING',
+              'ENCRYPTION', 'COMPRESSION', 'AES', 'GZIP'],
     install_requires=[
         'python-dateutil',
         'pytz',
