@@ -25,34 +25,39 @@ class Key(str):
 
     """
 
-    _ALLOWED_CHARACTERS = string.ascii_lowercase + string.digits + '_'
-    _ALLOWED_STARTSWITH = string.ascii_lowercase
-    _MINIMUM_ALLOWED_LENGTH = 3
-    _RESERVED = '___'  # Used for separating key in segment
-    _SEPARATOR = '__'  # Separates groups in key
+    ALLOWED_CHARACTERS = string.ascii_lowercase + string.digits + '_'
+    ALLOWED_STARTSWITH = string.ascii_lowercase
+    MINIMUM_ALLOWED_LENGTH = 3
+
+    #: Separates key from other keys or elements, such as identity and zulu
+    #: in Atom
+    OUTER_SEPARATOR = '___'
+
+    #: Separates groups in key
+    SEPARATOR = '__'
 
     def __new__(cls, key):
         if isinstance(key, Key):
             key = str(key)
-        if not len(key) >= cls._MINIMUM_ALLOWED_LENGTH:
+        if not len(key) >= cls.MINIMUM_ALLOWED_LENGTH:
             raise KeyFormatError(f'Key too short. Key \'{key}\' has length '
                                  f'{len(key)}, while minimum length is '
-                                 f'{cls._MINIMUM_ALLOWED_LENGTH}')
-        if not key[0] in cls._ALLOWED_STARTSWITH:
+                                 f'{cls.MINIMUM_ALLOWED_LENGTH}')
+        if not key[0] in cls.ALLOWED_STARTSWITH:
             raise KeyFormatError(f'Invalid startswith. Key \'{key}\' cannot '
                                  f'start with \'{key[0]}\'. Allowed startswith '
-                                 f'characters are: {cls._ALLOWED_STARTSWITH}')
+                                 f'characters are: {cls.ALLOWED_STARTSWITH}')
         invalid_characters = [x for x in key if x not in
-                              cls._ALLOWED_CHARACTERS]
+                              cls.ALLOWED_CHARACTERS]
         if len(invalid_characters) > 0:
             raise KeyFormatError(f'Invalid character(s). Key \'{key}\' cannot '
                                  f'contain any of {invalid_characters}. '
                                  f'Allowed characters are: '
-                                 f'{cls._ALLOWED_CHARACTERS}')
-        if cls._RESERVED in key:
+                                 f'{cls.ALLOWED_CHARACTERS}')
+        if cls.OUTER_SEPARATOR in key:
             raise KeyFormatError(f'Key contains reserved element. '
                                  f'Key \'{key}\' cannot contain '
-                                 f'\'{cls._RESERVED}\'')
+                                 f'\'{cls.OUTER_SEPARATOR}\'')
         instance = super(Key, cls).__new__(cls, key)
         return instance
 
@@ -67,7 +72,7 @@ class Key(str):
 
         :returns: [str]
         """
-        return self.split(self._SEPARATOR)
+        return self.split(self.SEPARATOR)
 
     def with_separator(self, separator):
         """ Replace separator

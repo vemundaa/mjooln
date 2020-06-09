@@ -42,7 +42,8 @@ class Atom:
 
     """
 
-    _SEPARATOR = '___'
+    #: Separates elements in atom string
+    SEPARATOR = Key.OUTER_SEPARATOR
 
 
     @classmethod
@@ -76,7 +77,7 @@ class Atom:
         """
         if len(args) == 1:
             try:
-                z, k, i = args[0].split(self._SEPARATOR)
+                z, k, i = args[0].split(self.SEPARATOR)
             except ValueError as ve:
                 raise AtomError(f'Invalid input: {args[0]}')
             zulu = Zulu.elf(z)
@@ -109,7 +110,7 @@ class Atom:
         self.identity = identity
 
     def __str__(self):
-        return self._SEPARATOR.join([str(self.zulu), self.key, self.identity])
+        return self.SEPARATOR.join([str(self.zulu), self.key, self.identity])
 
     def custom_separator(self, separator):
         """ Atom string with custom separator
@@ -117,7 +118,7 @@ class Atom:
         :param separator: Custom separator
         :return: str
         """
-        return separator.join(str(self).split(self._SEPARATOR))
+        return separator.join(str(self).split(self.SEPARATOR))
 
     def levels(self,
                key_level=None,

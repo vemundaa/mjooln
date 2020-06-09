@@ -17,7 +17,8 @@ setup(
     url='https://mjooln.readthedocs.io/en/latest/',
     download_url='https://github.com/vemundaa/mjooln/archive/v_038.tar.gz',
     keywords=['JSON', 'PATH', 'FILE', 'FOLDER', 'FILE HANDLING',
-              'ENCRYPTION', 'COMPRESSION', 'AES', 'GZIP'],
+              'ENCRYPTION', 'COMPRESSION', 'AES', 'GZIP', 'UUID', 'UTC',
+              'MD5 CHECKSUM'],
     install_requires=[
         'python-dateutil',
         'pytz',

@@ -8,7 +8,7 @@ def test_segment():
     z = Zulu()
     i = Identity()
     s = Atom(z, k, i)
-    assert str(s) == f'{z}{Atom._SEPARATOR}{k}{Atom._SEPARATOR}{i}'
+    assert str(s) == f'{z}{Atom.SEPARATOR}{k}{Atom.SEPARATOR}{i}'
     assert s.key == k
     assert s.zulu == z
     assert s.identity == i
@@ -23,10 +23,10 @@ def test_segment():
         Atom(zulu=z, identity=i)
 
     with pytest.raises(AtomError):
-        Atom(f'{z}{k}{Atom._SEPARATOR}{i}')
+        Atom(f'{z}{k}{Atom.SEPARATOR}{i}')
 
     with pytest.raises(AtomError):
-        Atom(f'{z}{Atom._SEPARATOR}{k}{i}')
+        Atom(f'{z}{Atom.SEPARATOR}{k}{i}')
 
     with pytest.raises(AtomError):
         Atom('This is not a segment')
