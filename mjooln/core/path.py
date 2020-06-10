@@ -336,6 +336,15 @@ class Path(str):
         paths = self.glob(pattern=pattern, recursive=recursive)
         return [Path(x) for x in paths if x.is_file()]
 
+    @classmethod
+    def dev_print_tree(cls, startpath):
+        for root, dirs, files in os.walk(startpath):
+            level = root.replace(startpath, '').count(os.sep)
+            indent = ' ' * 4 * (level)
+            print('{}{}/'.format(indent, os.path.basename(root)))
+            subindent = ' ' * 4 * (level + 1)
+            for f in files:
+                print('{}{}'.format(subindent, f))
 
 class PathError(Exception):
     """ Convenience class for raising errors """

@@ -1,6 +1,6 @@
 import logging
 
-from mjooln import Dic, Doc, File, Folder, Atom, FileError
+from mjooln import Dic, Doc, File, Folder, Atom, FileError, Path
 
 logger = logging.getLogger(__name__)
 
@@ -100,8 +100,8 @@ class Root(Doc):
         :return: List of roots found in folder
         :rtype: [Root]
         """
-        folder = Folder.elf(folder)
-        paths = folder.glob(cls._FILE_WILDCARD, recursive=True)
+        path = Path.elf(folder)
+        paths = path.glob(cls._FILE_WILDCARD, recursive=True)
         roots = []
         for path in paths:
             if path.is_file():
