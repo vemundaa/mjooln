@@ -1,4 +1,5 @@
 import pytest
+from mjooln import File, NotRootException
 from mjooln.tree.ground import GroundProblem, Ground, NoGround
 from mjooln.tree.root import Root
 from mjooln.core.folder import Folder
@@ -8,6 +9,29 @@ def test_settle(tmp_folder):
     ground = Ground.settle(tmp_folder, 'test_ground')
     assert ground.list() == []
     assert len(ground.cave.list()) == 0
+    ground = Ground(tmp_folder)
+    assert ground.key == 'test_ground'
+
+def test_not_ground(tmp_folder):
+    ground = Ground.settle(tmp_folder, 'test_ground')
+    folder = Folder(ground)
+    g = folder.list('.*')[0]
+    c = g.list()[0]
+    cf = File(c.list('.*')[0])
+    dic = cf.read()
+    dic['ground_key'] = 'rubbish'
+    cf.write(dic)
+    with pytest.raises(NoGround):
+        Ground(tmp_folder)
+    cf.delete()
+    with pytest.raises(NotRootException):
+        Ground(tmp_folder)
+
+
+def test_settle_twice(tmp_folder):
+    Ground.settle(tmp_folder, 'test_ground')
+    with pytest.raises(GroundProblem):
+        Ground.settle(tmp_folder, 'test_ground_2')
 
 
 def test_cave(tmp_folder, tmp_files):

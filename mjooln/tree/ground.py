@@ -9,31 +9,17 @@ class GroundProblem(Exception):
 class NoGround(Exception):
     pass
 
-#     CAVE = 'cave'
-#     SPECIES = CAVE
-#
-#     @classmethod
-#     def is_cave(cls, folder):
-#         if cls.is_root(folder):
-#             root = Root(folder)
-#             if root.species() == cls.SPECIES:
-#                 return True
-#         return False
-    #
-    # @classmethod
-    # def plant(cls, folder, key, **kwargs):
-    #     raise CaveProblem('Cannot plant a cave. Use dig().')
-    #
-    # @classmethod
-    # def dig(cls, folder):
-    #     super(Cave, cls).plant(folder, key=cls.CAVE)
-    #
-    # def uproot(self, with_force=False, key=None):
-    #     raise CaveProblem('Cannot uproot a cave. You need to unsettle '
-    #                       'ground for this, which is rather complicated.')
-
 
 class Ground(Folder):
+    """
+    Custom hidden folder marking a specific folder as ``Ground``.
+
+    Intended usage is for marking a location in a file system or network drive
+    for simplified access. Roots in folder may be accessed directly, and
+    attributes and statistics regarding all roots in the underlying folder
+    structure may be stored in the ``cave``, which is a root folder hidden
+    under ``ground``.
+    """
 
     _CAVE = 'cave'
     _GROUND_KEY = 'ground_key'
@@ -64,22 +50,29 @@ class Ground(Folder):
         return len(paths) > 0
 
     @classmethod
-    def settle(cls, path, key):
-        path = Path.elf(path)
-        if not path.exists():
+    def settle(cls, folder, key):
+        """
+        Create new ground in the specified folder path, with the given key.
+
+        :param folder: Folder to settle
+        :type folder: Folder
+        :param key: Ground key
+        :type key: Key
+        :return: Settled ground
+        :rtype: Ground
+        """
+        folder = Folder.elf(folder)
+        if not folder.exists():
             raise GroundProblem(f'Cannot settle ground in non existent '
-                                f'path: {path}')
-        if not path.is_folder():
-            raise GroundProblem(f'Cannot settle ground if path '
-                                f'is not folder: {path}')
-        if cls._has_ground(path):
-            raise GroundProblem(f'This folder has already been settled: {path}')
+                                f'path: {folder}')
+        if cls._has_ground(folder):
+            raise GroundProblem(f'This folder has already been settled: {folder}')
 
         key = Key.elf(key)
-        ground_folder = cls._ground_folder(path, key)
+        ground_folder = cls._ground_folder(folder, key)
         ground_folder.create()
         Root.plant(ground_folder, 'cave', ground_key=key)
-        return cls(path)
+        return cls(folder)
 
     def __init__(self, folder):
         super(Ground, self).__init__()
@@ -90,7 +83,12 @@ class Ground(Folder):
         if not cave.key() == self._CAVE:
             raise NoGround(f'Invalid key in cave: {cave.key()}')
         try:
-            self.key = cave.dic()[self._GROUND_KEY]
+            ground_key = cave.dic()[self._GROUND_KEY]
+            if not ground_key == key:
+                raise NoGround(f'Ground key mismatch. '
+                               f'Expected from folder name: {key}. '
+                               f'Found in cave: {ground_key}')
+            self.key = Key.elf(ground_key)
         except KeyError:
             raise NoGround(f'Ground key not found in cave')
         self.zulu = cave.zulu()
@@ -102,5 +100,11 @@ class Ground(Folder):
         return (x for x in super().glob() if not x.startswith(ground_folder))
 
     def roots(self):
+        """
+        Find all roots recursively from ground folder
+
+        :return: List of all roots
+        :rtype: [Root]
+        """
         roots = Root.find_all(Folder(str(self)))
         return [x for x in roots if x.key != self._CAVE]
