@@ -2,13 +2,15 @@ import os
 import glob
 import logging
 import socket
-from mjooln.atom.zulu import Zulu
 import psutil
 from sys import platform
+
+from mjooln.atom.zulu import Zulu
 
 logger = logging.getLogger(__name__)
 
 
+# TODO: Handle network drives (i.e. not mounted)?
 class Path(str):
     """ Absolute paths as a string with convenience functions
 
@@ -62,7 +64,7 @@ class Path(str):
             Path.current()
                 '/Users/zaphod/dev'
             Path.join('code', 'earth')
-                '/Users/zaphod/dev/code/earth'
+                '/Users/zaphod/dev/code/donald'
 
         :return: Absolute path
         :rtype: Path

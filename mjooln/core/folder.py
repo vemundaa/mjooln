@@ -7,6 +7,7 @@ from mjooln.core.path import Path
 logger = logging.getLogger(__name__)
 
 
+# TODO: Allow volume as folder
 class Folder(Path):
 
     @classmethod
@@ -20,10 +21,7 @@ class Folder(Path):
         #     raise FolderError(f'Folder path cannot contain \'{cls.RESERVED}\''
         #                       f'but was found here: {cls.RESERVED}')
         if instance.exists():
-            if instance.is_volume():
-                raise FolderError(f'Path is a volume, '
-                                  f'not a folder: {str(instance)}')
-            elif instance.is_file():
+            if instance.is_file():
                 raise FolderError(f'Path is a file, '
                                   f'not a folder: {str(instance)}')
         return instance
@@ -172,10 +170,15 @@ class Folder(Path):
 
         Example::
 
-            f = Folder('dev', 'code', 'donald')
-            print(f)
-                '/Users/zaphod/dev/code/donald'
+            f = Folder.current()
+            f
+                '/Users/zaphod'
+            f.name()
+                'donald'
 
+            f = f.join('dev', 'code', 'donald')
+            f
+                '/Users/zaphod/dev/code/donald'
             f.name()
                 'donald'
 

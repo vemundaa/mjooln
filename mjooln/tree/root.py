@@ -39,6 +39,7 @@ class Root(Doc):
     """
     # TODO: Add atom and species description. Also needs to be planted
     # TODO: Change key to name?
+    # TODO: Allow compression and encryption
 
     #: Root class identifier
     ROOT = 'root'
@@ -297,6 +298,7 @@ class Root(Doc):
         """
         return self._folder
 
+    # TODO: Add choice to remove root, but leave contents?
     def uproot(self, with_force=False, key=None):
         """
         Remove root. If root has contents, use ``with_force=True`` and
