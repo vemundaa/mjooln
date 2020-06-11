@@ -10,8 +10,6 @@ def test_folder(tmp_folder, tmp_files):
     _num_test_files = len(tmp_files)
     with pytest.raises(mj.FolderError):
         mj.Folder(str(tmp_files[0]))
-    with pytest.raises(mj.FolderError):
-        mj.Folder('/')
     folder = mj.Folder.join(tmp_folder, 'new_folder')
     assert len(tmp_folder.list()) == _num_test_files
     folder.create()

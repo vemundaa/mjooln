@@ -11,6 +11,7 @@ class NoGround(Exception):
 
 
 class Ground(Folder):
+    # TODO: Revise after ground can be used to tag drives
     """
     Custom hidden folder marking a specific folder as ``Ground``.
 
@@ -45,9 +46,24 @@ class Ground(Folder):
         return cls._key_from_ground_folder(ground_folder)
 
     @classmethod
-    def _has_ground(cls, folder):
-        paths = folder.list(cls.STARTSWITH + '*')
-        return len(paths) > 0
+    def is_in(cls, folder):
+        """
+        Check if folder is settled ground
+
+        :raise GroundProblem: If folder contains multiple grounds, which is
+            is a major problem
+        :param folder: Folder to check
+        :type folder: Folder
+        :return: True if folder contains ground, False if not
+        :rtype: bool
+        """
+        num_paths = len(folder.list(cls.STARTSWITH + '*'))
+        if num_paths == 0:
+            return False
+        elif num_paths == 1:
+            return True
+        else:
+            raise GroundProblem(f'Folder has multiple grounds: {folder}')
 
     @classmethod
     def settle(cls, folder, key):
@@ -65,8 +81,9 @@ class Ground(Folder):
         if not folder.exists():
             raise GroundProblem(f'Cannot settle ground in non existent '
                                 f'path: {folder}')
-        if cls._has_ground(folder):
-            raise GroundProblem(f'This folder has already been settled: {folder}')
+        if cls.is_in(folder):
+            raise GroundProblem(f'This folder has already been '
+                                f'settled: {folder}')
 
         key = Key.elf(key)
         ground_folder = cls._ground_folder(folder, key)
@@ -100,6 +117,8 @@ class Ground(Folder):
         return (x for x in super().glob() if not x.startswith(ground_folder))
 
     def roots(self):
+        # TODO: Add max depth of search
+        # TODO: Add specific folders option (if implemented)
         """
         Find all roots recursively from ground folder
 
