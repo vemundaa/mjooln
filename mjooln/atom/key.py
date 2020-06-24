@@ -37,6 +37,7 @@ class Key(str):
     SEPARATOR = '__'
 
     def __new__(cls, key):
+        # TODO: Add list as input, creating key with separator
         if isinstance(key, Key):
             key = str(key)
         if not len(key) >= cls.MINIMUM_ALLOWED_LENGTH:

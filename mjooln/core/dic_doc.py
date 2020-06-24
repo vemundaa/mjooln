@@ -1,10 +1,11 @@
 import json
 import simplejson
+import yaml
 
 from mjooln.atom.zulu import Zulu, ZuluError
+from mjooln.atom.identity import Identity
+from mjooln.atom.key import Key
 from mjooln.atom.atom import Atom
-
-# TODO: Add YAML handling with pyyaml, yaml.dump(data, ff, allow_unicode=True)
 
 
 # TODO: Add custom class handling, including reserved words
@@ -152,6 +153,10 @@ class Dic:
         for key, item in dic.items():
             if isinstance(item, Zulu):
                 dic[key] = item.iso()
+            elif isinstance(item, Identity):
+                dic[key] = str(item)
+            elif isinstance(item, Key):
+                dic[key] = str(item)
             elif isinstance(item, Atom):
                 dic[key] = cls._to_strings(vars(item))
             elif isinstance(item, dict):
@@ -227,6 +232,19 @@ class Doc(Dic):
             raise DocError(f'Input object is neither dic '
                            f'nor doc: {type(dic_or_doc)}')
 
+    def add_yaml(self, yml, ignore_private=True):
+        """ Add YAML document as class attributes
+
+        Existing attributes will be replaced with the new value. Attributes
+        not contained in input dictionary or document will keep their value.
+
+        :param yml: YAML document
+        :param ignore_private: Ignore private attributes flag
+        """
+        dic = yaml.load(yml)
+        dic = self._from_strings(dic)
+        Dic._add_dic(self, dic, ignore_private=ignore_private)
+
     def doc(self, ignore_private=True):
         """ Copy class attributes into a JSON document
 
@@ -236,3 +254,14 @@ class Doc(Dic):
         dic = self.dic(ignore_private=ignore_private)
         dic = self._to_strings(dic)
         return JSON.dumps(dic)
+
+    def yaml(self, ignore_private=True):
+        """ Copy class attributes into a YAML document
+
+        :param ignore_private: Ignore private attributes flag
+        :return: YAML document
+        """
+        dic = self.dic(ignore_private=ignore_private)
+        dic = self._to_strings(dic)
+        return yaml.dump(dic)
+

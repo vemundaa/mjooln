@@ -5,6 +5,8 @@
 
 Introduction
 ============
+.. note:: Codebase and documentation not completed
+
 File tree structure with convenience classes for file read/write/move/copy,
 encryption, UTC timestamps, UUID etc.
 
@@ -44,6 +46,8 @@ Create a tree and add some files::
    tree = Tree.plant(folder, tree_name, is_compressed=True)
 
 
+
+.. note:: To be continued...
 
 Class list
 ==========

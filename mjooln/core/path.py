@@ -132,6 +132,9 @@ class Path(str):
         # if not isinstance(path_str, str):
         #     raise PathError(f'Input to constructor must be string, '
         #                     f'use elf() method for a softer approach.')
+        # TODO: Add limitation on path length 260 (256 or 260). Or warning
+        # TODO: Central configuration (exception or warning on this)
+        # TODO: Central config as yml, and in home dir
         if not os.path.isabs(path_str):
             path_str = path_str.replace('\\', cls._FOLDER_SEPARATOR)
             path_str = os.path.abspath(path_str)
@@ -231,7 +234,7 @@ class Path(str):
         .. warning:: If Path is a folder, ``size()`` will return a small number,
             representing the size of the folder object, not its contents.
             For finding actual disk usage of a folder, use
-            :meth:`.Folder.disk_usage()` in the :class:`.Folder` class
+            :meth:`.Folder.disk_usage()`
 
         :raises PathError: If path does not exist
         :returns: File or folder size
@@ -240,7 +243,8 @@ class Path(str):
         if self.exists():
             return os.stat(self).st_size
         else:
-            raise PathError(f'Cannot determine size of non existent path: {self}')
+            raise PathError(f'Cannot determine size of '
+                            f'non existent path: {self}')
 
     def created(self):
         """ Get created timestamp

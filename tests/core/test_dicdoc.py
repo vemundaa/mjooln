@@ -64,6 +64,21 @@ def test_doc():
     assert d.z == ddd.z
     assert str(d.s) == str(atom)
 
+def test_yaml():
+    d = Doc()
+    d.a = 5
+    d.b = 'five'
+    atom = Atom(key='dummy')
+    d.s = atom
+    d.z = Zulu()
+    dd = d.yaml()
+    ddd = Doc()
+    ddd.add_yaml(dd)
+    assert d.a == ddd.a
+    assert d.b == ddd.b
+    assert d.z == ddd.z
+    assert str(d.s) == str(atom)
+
 
 def test_json_list():
     some_list = [

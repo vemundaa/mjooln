@@ -12,6 +12,7 @@ class NoGround(Exception):
 
 class Ground(Folder):
     # TODO: Revise after ground can be used to tag drives
+    # TODO: Revise to remove Folder inheritance. Or make sure cannot be misused
     """
     Custom hidden folder marking a specific folder as ``Ground``.
 
@@ -114,7 +115,12 @@ class Ground(Folder):
 
     def glob(self, pattern='*', recursive=False):
         ground_folder = self._ground_folder(self, self.key)
-        return (x for x in super().glob() if not x.startswith(ground_folder))
+        return (x for x in super().glob(pattern=pattern, recursive=recursive)
+                if not x.startswith(ground_folder))
+
+    @classmethod
+    def join(cls, *args):
+        return Folder.join(*args)
 
     def roots(self):
         # TODO: Add max depth of search

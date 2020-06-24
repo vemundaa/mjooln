@@ -25,6 +25,7 @@ setup(
         'simplejson',
         'psutil',
         'cryptography',
+        'pyyaml',
     ],
     classifiers=[
         'Development Status :: 3 - Alpha',

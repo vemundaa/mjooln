@@ -512,6 +512,26 @@ class Zulu(datetime.datetime):
         """
         return self.astimezone(self._tz_from_name(tz))
 
+    def epoch(self):
+        """
+        Get epoch (seconds since January 1st 1970)
+
+        Wrapper for ``datetime.datetime.timestamp()``
+
+        :return: Seconds since January 1st 1970
+        :rtype: float
+        """
+        return self.timestamp()
+
+    def to_unaware(self):
+        """
+        Get timezone unaware datetime object in UTC
+
+        :return: Timezone unaware datetime
+        :rtype: datetime.datetime
+        """
+        return datetime.datetime.utcfromtimestamp(self.epoch())
+
     def format(self, pattern):
         """Format Zulu to string with the given pattern
 

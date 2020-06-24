@@ -75,6 +75,8 @@ class Tree(Root):
               time_level=0,
               encryption_key=None,
               **kwargs):
+        # TODO: Add warning for long keys that may result in long path names
+        # zulu: 23, id: 36, seps: 2 x 3, max_path:??
         """
         Creates a new tree
 
