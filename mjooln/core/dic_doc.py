@@ -8,6 +8,14 @@ from mjooln.atom.key import Key
 from mjooln.atom.atom import Atom
 
 
+class DicError(Exception):
+    pass
+
+
+class DocError(Exception):
+    pass
+
+
 # TODO: Add custom class handling, including reserved words
 class JSON:
     """Dict to/from JSON string, with optional human readable"""
@@ -107,14 +115,24 @@ class Dic:
             if key not in dic:
                 self.__delattr__(key)
 
-    def dev_print(self, ignore_private=True, indent=4*' ', width=80):
+    def dev_print(self,
+                  ignore_private=True,
+                  indent=4*' ',
+                  width=80,
+                  flatten=False,
+                  separator='__'):
+        # TODO: Rename dev_print to print (print goes to terminal inherently)
         """ Pretty print of attributes in terminal meant for development
         purposes
         """
         text = f'--{indent}[[ {type(self).__name__} ]]{indent}'
         text += (width-len(text)) * '-'
         print(text)
-        self._dev_print(self.dic(ignore_private=ignore_private), level=0)
+        if not flatten:
+            dic = self.dic(ignore_private=ignore_private)
+        else:
+            dic = self.flatten(sep=separator)
+        self._dev_print(dic, level=0)
         print(width*'-')
 
     def _dev_print(self, dic, level=0, indent=4*' '):
@@ -123,6 +141,43 @@ class Dic:
                 self._dev_print(item, level=level+1)
             else:
                 print(level*indent + f'{key}: [{type(item).__name__}] {item} ')
+
+    def dev_print_flat(self, ignore_private=True, separator='__'):
+        self.dev_print(ignore_private=ignore_private,
+                       separator=separator, flatten=True)
+
+    def flatten(self, sep='__', ignore_private=True):
+        """
+        Flatten dictionary to top level only by combining keys with the
+        given separator
+
+        :param sep: Separator to use, default is double underscore (__)
+        :type sep: str
+        :param ignore_private: Flags whether to ignore private attributes,
+            identified by starting with underscore
+        :return: Flattened dictionary
+        :rtype: dict
+        """
+        dic = self.dic(ignore_private=ignore_private)
+        flat_dic = dict()
+        flat_dic = self._flatten(flat_dic=flat_dic, parent_key='',
+                                 dic=dic, sep=sep)
+        return flat_dic
+
+    def _flatten(self, flat_dic, parent_key, dic, sep='__', ):
+        for key, item in dic.items():
+            if isinstance(item, dict):
+                flat_dic = self._flatten(flat_dic=flat_dic, parent_key=key,
+                                         dic=item, sep=sep)
+            else:
+                if sep in key:
+                    raise DicError(f'Separator \'{sep}\' found in '
+                                   f'key: {key}')
+                if parent_key:
+                    flat_dic[parent_key + sep + key] = item
+                else:
+                    flat_dic[key] = item
+        return flat_dic
 
     @classmethod
     def _parse_if_iso(cls, string):
@@ -164,10 +219,6 @@ class Dic:
             elif isinstance(item, Dic):
                 dic[key] = cls._to_strings(item.dic())
         return dic
-
-
-class DocError(Exception):
-    pass
 
 
 class Doc(Dic):

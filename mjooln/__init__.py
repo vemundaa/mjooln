@@ -3,7 +3,7 @@ from mjooln.atom.zulu import Zulu, ZuluError
 from mjooln.atom.key import Key, KeyFormatError
 from mjooln.atom.atom import Atom, AtomError
 
-from mjooln.core.dic_doc import Dic, Doc, JSON, DocError
+from mjooln.core.dic_doc import Dic, Doc, JSON, DicError, DocError
 from mjooln.core.crypt import Crypt, CryptError
 from mjooln.core.path import Path, PathError
 from mjooln.core.folder import Folder, FolderError

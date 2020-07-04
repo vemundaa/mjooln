@@ -150,8 +150,10 @@ class Zulu(datetime.datetime):
 
     @classmethod
     def now(cls, tz=None):
-        """Overrides datetime.datetime.now(). Equivalent to Zulu()
+        """
+        Overrides ``datetime.datetime.now()``. Equivalent to ``Zulu()``
 
+        :raise ZuluError: If parameter ``tz`` has a value
         :param tz: Do not use. Zulu is always UTC
         :return: Zulu
         """
@@ -200,6 +202,7 @@ class Zulu(datetime.datetime):
         """
         res = cls._REGEX.search(text)
         if res:
+            # TODO: Raise exception if multiple hits are found
             return cls(res.group())
         else:
             raise ZuluError(f'No zulu found in this text: {text}. '
@@ -242,7 +245,7 @@ class Zulu(datetime.datetime):
         """ Returns a list of all allowed timezone names, except \'local\',
         which will return a datetime object with local timezone
 
-        Wrapper for pytz.all_timezones
+        Wrapper for ``pytz.all_timezones``
 
         :return: list
         """
@@ -503,9 +506,8 @@ class Zulu(datetime.datetime):
     def to_tz(self, tz='local'):
         """ Create regular datetime with input timezone
 
-        For a list of timezones::
-
-            Zulu.dev_list_timezones()
+        For a list of timezones use :meth:`.Zulu.all_timezones()`, which is a
+        wrapper for
 
         :param tz: Time zone to use. 'local' will return the local time zone
         :return: datetime.datetime

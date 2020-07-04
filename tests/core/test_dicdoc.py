@@ -1,4 +1,5 @@
-from mjooln import Dic, Doc, JSON, Zulu, Atom
+import pytest
+from mjooln import Dic, Doc, JSON, Zulu, Atom, DicError
 
 
 def test_dic():
@@ -87,3 +88,30 @@ def test_json_list():
     json = JSON.dumps(some_list)
     dic = JSON.loads(json)
     assert dic == some_list
+
+
+def test_flatten():
+    d = {
+        'one': {
+            'two': 2,
+            'three': 3,
+        },
+        'four': 4,
+        'five': 5,
+    }
+    dic = Dic()
+    dic.add(d)
+    fdic = dic.flatten()
+    tfdic = {'one__two': 2, 'one__three': 3, 'four': 4, 'five': 5}
+    assert fdic == tfdic
+    fdic = dic.flatten(sep='/')
+    tfdic = {'one/two': 2, 'one/three': 3, 'four': 4, 'five': 5}
+    assert fdic == tfdic
+
+    sep = '/'
+    d['bad' + sep + 'key'] = 6
+    dic.add(d)
+    with pytest.raises(DicError):
+        dic.flatten(sep=sep)
+
+

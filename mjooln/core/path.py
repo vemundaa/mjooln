@@ -329,6 +329,7 @@ class Path(str):
         return [Path(x) for x in paths if x.is_folder()]
 
     def files(self, pattern='*', recursive=False):
+        # TODO: Make this return file objects (same with folders())
         """ List files in folder
 
         :raises PathError: If path does not exist, or if path is not a folder
