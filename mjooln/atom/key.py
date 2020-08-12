@@ -5,7 +5,7 @@ logger = logging.getLogger(__name__)
 
 
 class Key(str):
-    """ Defines key strings with limitations
+    """ Defines key string with limitations
 
     - Minimum length is 3
     - Allowed characters are
@@ -13,14 +13,15 @@ class Key(str):
         - Digits (0-9)
         - Underscore (_)
         - Double underscore (__)
+    - Underscore and digits can not be the first character
     - The double underscore act as separator for groups in the key
     - Triple underscore is reserved for separating keys from other strings,
         such as in class :class:`.Atom`
 
     Sample keys::
 
-        '_some_private_key'
         'simple'
+        'with_longer_name'
         'group_one__group_two__group_three'
 
     """
@@ -39,7 +40,8 @@ class Key(str):
     def __new__(cls, key):
         # TODO: Add list as input, creating key with separator
         if isinstance(key, Key):
-            key = str(key)
+            raise KeyFormatError(f'Input must be string, not Key. Use'
+                                 f'Key.elf() to allow this.')
         if not len(key) >= cls.MINIMUM_ALLOWED_LENGTH:
             raise KeyFormatError(f'Key too short. Key \'{key}\' has length '
                                  f'{len(key)}, while minimum length is '

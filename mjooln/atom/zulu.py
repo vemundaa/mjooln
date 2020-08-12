@@ -420,7 +420,7 @@ class Zulu(datetime.datetime):
         """
         if not start:
             start = cls()
-        return [cls(start + x * delta) for x in range(n)]
+        return [Zulu.elf(start + x * delta) for x in range(n)]
 
     def __new__(cls, *args, **kwargs):
         # TODO: Cleanup instantiation (ZuluString is used three times)
@@ -512,7 +512,9 @@ class Zulu(datetime.datetime):
         :param tz: Time zone to use. 'local' will return the local time zone
         :return: datetime.datetime
         """
-        return self.astimezone(self._tz_from_name(tz))
+        ts_utc = datetime.datetime.utcfromtimestamp(self.epoch())
+        ts_utc = ts_utc.replace(tzinfo=pytz.UTC)
+        return ts_utc.astimezone(self._tz_from_name(tz))
 
     def epoch(self):
         """
